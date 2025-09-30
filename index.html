@@ -75,7 +75,7 @@
                 <button id="btnExportRanking" class="btn btn-sm btn-outline-primary"><i class="bi bi-box-arrow-down"></i> Exportar</button>
               </div>
             </div>
-            <p class="text-muted small">Se guarda en <code>localStorage</code> (y en Firebase si está disponible). Ordenado por % desc.</p>
+            <p class="text-muted small">Se guarda en <code>localStorage</code> (y en Firebase si está disponible). Ordenado por % desc; en empate gana quien lo obtuvo primero.</p>
             <div class="table-responsive">
               <table class="table table-hover align-middle">
                 <thead>
@@ -194,9 +194,22 @@
     });
     browseLink.addEventListener('click', e=>{ e.preventDefault(); fileInput.click(); });
 
-    // ===== RANKING render (🔥 para el top 1) =====
+    // ===== Orden de ranking: pct DESC, luego createdAt ASC (primero en lograrlo) =====
+    function tsFrom(r){
+      if (typeof r.createdAt === 'number' && Number.isFinite(r.createdAt)) return r.createdAt;
+      const t = Date.parse(r.date ?? '');
+      return Number.isFinite(t) ? t : Number.POSITIVE_INFINITY; // si no hay info, al final
+    }
+    function compareRanking(a,b){
+      const pa = +a.pct, pb = +b.pct;
+      if (pb !== pa) return pb - pa;          // % desc
+      return tsFrom(a) - tsFrom(b);           // más antiguo primero
+    }
+
+    // ===== RANKING render (🔥 para el top 1 tras ordenar) =====
     function renderRankingFromArray(arr){
-      rankingBody.innerHTML = arr.map((r,i)=> {
+      const sorted = [...arr].sort(compareRanking);
+      rankingBody.innerHTML = sorted.map((r,i)=> {
         const pos = i + 1;
         const labelTeam = (i===0 ? '🔥 ' : '') + r.team;
         return `
@@ -258,11 +271,10 @@
       resultCard.classList.add('alert-info');
       resultCard.innerHTML = `<strong>Resultado:</strong> Coincidencias ${matches} / ${comparable.length} ⇒ <span class="badge text-bg-primary score-badge">${fmtPct(pct)}</span>`;
 
-      // Ranking local
-      const entry = { team, pct: +(pct*100).toFixed(4), date: todayISO() };
+      // Ranking local (guarda createdAt para resolver empates)
+      const entry = { team, pct: +(pct*100).toFixed(4), date: todayISO(), createdAt: Date.now() };
       const arr = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
       arr.push(entry);
-      arr.sort((a,b)=> b.pct - a.pct);
       localStorage.setItem(LS_KEY, JSON.stringify(arr));
       renderRankingLocal();
 
@@ -280,7 +292,7 @@
       }
     });
     document.getElementById('btnExportRanking').addEventListener('click', ()=>{
-      const arr = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+      const arr = JSON.parse(localStorage.getItem(LS_KEY) || '[]').sort(compareRanking);
       const header = ['pos','equipo','fecha','porcentaje'];
       const lines = [header.join(',')].concat(arr.map((r,i)=> [i+1, r.team, r.date, r.pct].join(',')));
       const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8;'});
@@ -326,14 +338,14 @@
       console.warn("Firebase no inicializado (seguís con localStorage).", e);
     }
 
-    // Guardar ranking en RTDB con manejo de errores visible
+    // Guardar ranking en RTDB (con createdAt para resolver empates por tiempo)
     window.saveRankingToRTDB = async function(entry) {
       if (!db) return;
       const payload = {
         team: entry.team,
         pct: entry.pct,
         date: entry.date,
-        createdAt: Date.now(),
+        createdAt: entry.createdAt ?? Date.now(),
         negPct: -entry.pct
       };
       try {
@@ -345,13 +357,21 @@
       }
     };
 
-    // Escuchar SIEMPRE el ranking remoto (reemplaza la tabla aunque esté vacío)
+    // Leer ranking remoto y ordenar por pct DESC + createdAt ASC (garantiza empate correcto).
     if (db) {
       const q = query(ref(db, "rankings"), orderByChild("negPct"), limitToFirst(100));
       onValue(q, (snap) => {
         const arr = [];
-        snap.forEach(child => arr.push(child.val())); // orden desc por negPct
-        window.renderRankingFromArray(arr);
+        snap.forEach(child => {
+          const v = child.val();
+          // asegurar createdAt numérico si vino como string
+          if (typeof v.createdAt !== 'number') {
+            const t = Date.parse(v.date ?? '');
+            v.createdAt = Number.isFinite(t) ? t : Date.now();
+          }
+          arr.push(v);
+        });
+        window.renderRankingFromArray(arr); // vuelve a ordenar con compareRanking
       }, (err) => {
         console.error("RTDB READ ERROR:", err);
         alert("❌ No se pudo leer de Firebase. Detalle: " + (err.code || err.message));
