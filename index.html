@@ -20,7 +20,6 @@
     .drop-zone{border:2px dashed #6c757d; border-radius:1rem; padding:2rem; transition: all .2s}
     .drop-zone.drag{border-color:#0d6efd; background:#e7f1ff}
     .score-badge{font-variant-numeric: tabular-nums;}
-    .table thead th{position:sticky; top:0; background:#f8fafc;}
     footer a{color:inherit}
   </style>
 </head>
@@ -68,30 +67,9 @@
 
             <div class="d-flex gap-2 mb-3">
               <button id="btnValidate" class="btn btn-primary"><i class="bi bi-check2-circle"></i> Validar coincidencia</button>
-              <button id="btnDownloadDiff" class="btn btn-outline-secondary" disabled><i class="bi bi-download"></i> Descargar diferencias</button>
             </div>
 
             <div id="resultCard" class="alert alert-info d-none" role="alert"></div>
-
-            <div id="details" class="d-none">
-              <h3 class="h6">Resumen</h3>
-              <ul class="small mb-3" id="summaryList"></ul>
-              <div class="table-responsive" style="max-height: 320px;">
-                <table class="table table-sm align-middle">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>ID</th>
-                      <th>Predicho</th>
-                      <th>Esperado</th>
-                      <th>Coincide</th>
-                    </tr>
-                  </thead>
-                  <tbody id="diffTable"></tbody>
-                </table>
-              </div>
-            </div>
-
           </div>
         </div>
       </div>
@@ -107,7 +85,7 @@
                 <button id="btnExportRanking" class="btn btn-sm btn-outline-primary"><i class="bi bi-box-arrow-down"></i> Exportar</button>
               </div>
             </div>
-            <p class="text-muted small">Se guarda en <code>localStorage</code> del navegador (y opcionalmente en Firebase). Ordenado por % desc.</p>
+            <p class="text-muted small">Se guarda en <code>localStorage</code> del navegador (y en Firebase si está disponible). Ordenado por % desc.</p>
             <div class="table-responsive">
               <table class="table table-hover align-middle">
                 <thead>
@@ -124,6 +102,7 @@
           </div>
         </div>
       </div>
+
     </div>
   </main>
 
@@ -137,15 +116,17 @@
        GOLDEN TRUTH EMBEBIDO
        ====================== -->
   <script>
-    // Mapa ID -> Etiqueta esperada (boolean) — tu objeto original:
-    const GOLD_TRUTH = {"12130":false,"6418":false,"191":false,"13373":false,"8078":false,"6186":false,"6890":false,"1398":false,"11287":false,"11361":false,"3886":false,"12216":false,"13265":false,"3723":false,"10857":false,"12076":false,"12381":false,"6581":true,"4842":true,"6900":false,"201":true,"13457":false,"6460":false,"11681":false,"13143":false,"6829":false,"8175":false,"3568":false,"11659":false,"12107":false,"7482":true,"11102":false,"13572":false,"10021":false,"1164":false,"4987":false,"3480":false,"7140":false,"12145":false,"7652":false,"8358":false,"747":false,"12676":false,"13232":false,"9648":false,"5151":false,"7783":false,"13446":false,"3283":false,"6244":false,"7137":false,"3951":false,"8775":false,"4718":false,"2843":false,"8422":false,"6414":false,"11311":false,"2913":false,"11202":false,"1812":false,"6812":false,"6753":false,"5395":false,"2869":false,"4759":false,"8141":false,"11561":false,"6323":false,"13374":false,"12173":false,"1839":false,"3946":false,"13699":false,"4869":false,"8582":false,"9432":false,"9199":false,"10713":false,"1173":false,"11898":false,"13431":false,"12469":false,"13080":false,"13231":false,"11447":false,"8706":false,"9551":false,"10185":false,"3212":false,"12637":false,"13667":false,"671":false,"9503":false,"8444":false,"13004":false,"8313":false,"9266":false,"12961":false,"5673":false,"13158":false,"13372":false,"8754":false,"9423":false,"11935":false,"9173":false,"11069":false,"13236":false,"13439":false,"13668":false,"12298":false,"12658":false,"6763":false,"9292":false,"4576":false,"3792":false,"11527":false,"13039":false,"4188":false,"10630":false,"13566":false,"13641":false,"8896":false,"11301":false,"5168":false,"5492":false,"11839":false,"8973":false,"8190":false,"9328":false,"10513":false,"8885":false,"12571":false,"11815":false,"3679":false,"12809":false,"11473":false,"8930":false,"4076":false,"13503":false,"9880":false,"12275":false,"10872":false,"12575":false,"13650":false,"7809":false,"9682":false,"3242":false,"12062":false,"8370":false,"7355":false,"12889":false,"9081":false,"13200":false,"10997":false,"11534":false,"10543":false,"13049":false,"10390":false,"4217":false,"12415":false,"5923":false,"3645":false,"9226":false,"11544":false,"5208":false,"7821":false,"8343":false,"9160":false,"10540":false,"10906":false,"13387":false,"13398":false,"11331":false,"6875":false,"10736":false,"10596":false,"13652":false,"1227":false,"8922":false,"13316":false,"11297":false,"13589":false,"13531":false,"13672":false,"9913":false,"1346":false,"6416":false,"745":false,"12301":false,"10210":false,"1131":false,"3290":false,"13568":false,"12938":false,"11234":false,"7881":false,"11503":false,"10931":false,"9617":false,"11634":false,"10912":false,"12739":false,"12717":false,"13058":false,"12476":false,"12152":false,"12494":false,"9807":false,"10378":false,"12001":false,"12369":false,"11070":false,"11620":false,"11801":false,"13472":false,"10740":false,"12913":false,"13105":false,"10304":false,"13019":false,"10223":false,"12577":false,"13409":false,"13121":false,"12072":false,"11989":false,"11017":false,"11652":false,"11619":false,"11936":false,"13201":false,"10101":false,"11806":false,"9304":false,"13502":false,"12848":false,"13016":false,"11635":false,"11536":false,"12752":false,"11329":false,"13478":false,"13435":false,"12971":false,"10951":false,"12648":false,"8913":false,"12962":false,"11944":false,"10799":false,"10308":false,"11263":false,"6431":false,"12554":false,"9813":false,"11538":false,"11073":false,"12782":false,"9100":false,"5203":false,"6963":false,"12265":false,"11735":false,"11042":false,"1141":false,"10483":false,"12300":false,"11747":false,"13420":false,"11702":false,"13666":false,"3692":false,"10278":false,"12875":false,"12877":false,"13700":false,"11170":false,"11861":false,"13162":false,"13055":false,"13205":false,"12188":false,"12294":false,"13309":false,"5912":false,"9964":false,"10683":false,"8674":false,"10457":false,"11458":false,"12667":false,"10407":false,"5528":false,"7390":false,"11922":false,"12120":false,"12534":false,"11610":false,"11915":false,"11655":false,"11454":false,"11841":false,"1236":false,"12200":false,"13459":false,"11995":false,"6006":false,"13627":false,"12546":false,"11173":false,"11908":false,"9764":false,"12650":false,"7986":false,"13123":false,"10406":false,"11760":false,"11529":false,"11646":false,"12423":false,"11429":false,"12123":false,"12976":false,"11869":false,"11352":false,"12614":false,"13364":false,"13474":false,"10936":false,"12818":false,"13587":false,"10832":false,"11015":false,"8900":false,"12617":false,"10329":false,"10796":false,"12524":false,"10232":false,"10939":false,"13461":false,"12449":false,"13319":false,"12920":false,"12438":false,"11718":false,"12596":false,"7556":false,"11601":false,"12993":false,"11446":false,"9894":false,"13519":false,"9681":false,"12773":false,"11725":false,"13522":false,"6244":false,"12162":false,"11846":false,"9548":false,"12767":false,"10469":false,"10535":false,"12154":false,"8807":false,"13648":false,"1176":false,"10637":false,"12096":false,"11112":false,"1208":false,"11988":false,"12247":false,"11795":false,"11183":false,"10358":false,"12741":false,"12458":false,"12701":false,"10301":false,"10561":false,"12790":false,"12340":false,"10517":false,"12239":false,"10305":false,"1226":false,"9241":false,"3643":false,"12460":false,"11071":false,"10986":false,"1335":false,"12347":false,"12133":false,"10299":false,"12149":false,"12631":false,"7506":false,"11135":false,"11030":false,"10632":false,"11026":false,"13428":false,"12838":false,"13310":false,"9106":false,"11667":false,"11418":false,"13516":false,"1062":false,"12880":false,"12151":false,"11516":false,"13009":false,"11826":false,"11698":false,"11225":false,"12685":false,"12361":false,"12180":false,"11927":false,"13554":false,"11497":false,"4346":false,"5916":false,"10459":false,"10843":false,"7826":false,"11597":false,"11487":false,"11151":false,"12568":false,"12397":false,"11423":false,"13217":false,"4371":false,"12592":false,"13270":false,"13665":false,"13131":false,"11241":false,"11184":false,"1167":false,"11647":false,"11021":false,"925":false,"9143":false,"9384":false,"13422":false,"5302":false,"12242":false,"1037":false,"11959":false,"12742":false,"13241":false,"10805":false,"12126":false,"13365":false,"7979":false,"12342":false,"13126":false,"9350":false,"9300":false,"12061":false,"13237":false,"12217":false,"11709":false,"13134":false,"12749":false,"13451":false,"11218":false,"11587":false,"11627":false,"11866":false,"6236":false,"12192":false,"11203":false,"8682":false,"8047":false,"13007":false,"13636":false,"13638":false,"13317":false,"12932":false,"11929":false,"4240":false,"12922":false,"11713":false,"11410":false,"11645":false,"12259":false,"11932":false,"11369":false,"11344":false,"12704":false,"13379":false,"13104":false,"11494":false,"11269":false,"12727":false,"12092":false,"11318":false,"12356":false,"12643":false,"11046":false,"12376":false,"12829":false,"5974":false,"11830":false,"11275":false,"11786":false,"12797":false,"12100":false,"11693":false,"10784":false,"11986":false,"11829":false,"10786":false,"12736":false,"10882":false,"11868":false,"13341":false,"13402":false,"12916":false,"12257":false,"11894":false,"12548":false,"11792":false,"12170":false,"13380":false,"11670":false,"12559":false,"11820":false,"12544":false,"12566":false,"12833":false,"13537":false,"11000":false,"12927":false,"11554":false,"4638":false,"13429":false,"11134":false,"12718":false,"1219":false,"13414":false,"13349":false,"12531":false,"13581":false,"12831":false,"11254":false,"11777":false,"11169":false,"10273":false,"11909":false,"12670":false,"13076":false,"12564":false,"13020":false,"11314":false,"12965":false,"11436":false,"11292":false,"12884":false,"13612":false,"12244":false,"13069":false,"11939":false,"12792":false,"12408":false,"13597":false,"11402":false,"13393":false,"11919":false,"12409":false,"11032":false,"12760":false,"13171":false,"13022":false,"13312":false,"12678":false,"1225":false,"11478":false,"1166":false,"11803":false,"12102":false,"12737":false,"13035":false,"12406":false,"11859":false,"11979":false,"10865":false,"10364":false,"12290":false,"12532":false,"12679":false,"13257":false,"12064":false,"12431":false,"10915":false,"12436":false,"12803":false,"12660":false,"12921":false,"11367":false,"11425":false,"11092":false,"12616":false,"12580":false,"12702":false,"11349":false,"10955":false,"11421":false,"12655":false,"11412":false,"11310":false,"12481":false,"12507":false,"12697":false,"13714":false,"12493":false,"12344":false,"11602":false,"12442":false,"11400":false,"13238":false,"11630":false,"11549":false,"12573":false,"12628":false,"11780":false,"13269":false,"11435":false,"11885":false,"10777":false,"11500":false,"11408":false,"13045":false,"12395":false,"9498":false,"12218":false,"11083":false,"6613":false,"12514":false,"10249":false,"12626":false,"10639":false,"13169":false,"11214":false,"11573":false,"12487":false,"1254":false,"13051":false,"10770":false,"13619":false,"12758":false,"12515":false,"12116":false,"12746":false,"11343":false,"11045":false,"12764":false,"12311":false,"12183":false,"12743":false,"13078":false,"12663":false,"11947":false,"11041":false,"10876":false,"12457":false,"11504":false,"12047":false,"10932":false,"12114":false,"12175":false,"12137":false,"3537":false,"12132":false,"11971":false,"13010":false,"13264":false,"13530":false,"13367":false,"12378":false,"10727":false,"13120":false,"11990":false,"13549":false,"11160":false,"13497":false,"4193":false,"13106":false,"11996":false,"11374":false,"12050":false,"11764":false,"11168":false,"11120":false,"12708":false,"12164":false,"13343":false,"11510":false,"12975":false,"10504":false,"11265":false,"10650":false,"10367":false,"10899":false,"12057":false,"13032":false,"12146":false,"13185":false,"13110":false,"12768":false,"11729":false,"13130":false,"12199":false,"12686":false,"12624":false,"11746":false,"11381":false,"12056":false,"12070":false,"12109":false,"11656":false,"12292":false,"13140":false,"13061":false,"12339":false,"13136":false,"12159":false,"12778":false,"12721":false,"12143":false,"12816":false,"12010":false,"12710":false,"11855":false,"11518":false,"12245":false,"12914":false,"13013":false,"12394":false,"12563":false,"12874":false,"12924":false,"11571":false,"12661":false,"12802":false,"11849":false,"11778":false,"13088":false,"13145":false,"1261":false,"11774":false,"12483":false,"12868":false,"12160":false,"12931":false,"11911":false,"11714":false,"13113":false,"13219":false,"12934":false,"11759":false,"13150":false,"13065":false,"12155":false,"12433":false,"12307":false,"13189":false,"12284":false,"12822":false,"13011":false,"12526":false,"12911":false,"12757":false,"12892":false,"11867":false,"11852":false,"12315":false,"13067":false,"11599":false,"12769":false,"12917":false,"13102":false,"12713":false,"12615":false,"13165":false,"13160":false,"12603":false,"12584":false,"12645":false,"13128":false,"12847":false,"11779":false,"12224":false,"12896":false,"13118":false,"12935":false,"13083":false,"12947":false,"12684":false,"13044":false,"13229":false,"13063":false,"13135":false,"12621":false,"12633":false,"11771":false,"12539":false,"12672":false,"12653":false,"12747":false,"13086":false,"12508":false,"12583":false,"12677":false,"12863":false,"12700":false,"12627":false,"12682":false,"13153":false,"12725":false,"12632":false,"12824":false,"12907":false,"12964":false,"12789":false,"12695":false,"12525":false,"12664":false,"13111":false};
+    /* Tu objeto original (recortado por brevedad — mantené el completo que pegaste) */
+    const GOLD_TRUTH = {/* ... TU OBJETO LARGO AQUÍ ... */};
 
-    // IDs que (según el CSV real) deben ser true y en tu objeto estaban false:
+    /* IDs que deben ser true (overrides del GOLD embebido) */
     const GOLD_PATCH = {
-      "13118": true,"11120": true,"12114": true,"11021": true,"1812": true,"12993": true,"7137": true,"8885": true,"12580": true,
-      "12755": true,"12796": true,"13207": true,"13057": true,"12692": true,"12048": true,"12111": true,"11495": true,"5860": true,
-      "12000": true,"12801": true,"12125": true,"12676": true,"12868": true,"13110": true,"13140": true,"11030": true,"1167": true,
-      "12721": true
+      "13118": true,"11120": true,"12114": true,"11021": true,"1812": true,"12993": true,
+      "7137": true,"8885": true,"12580": true,"12755": true,"12796": true,"13207": true,
+      "13057": true,"12692": true,"12048": true,"12111": true,"11495": true,"5860": true,
+      "12000": true,"12801": true,"12125": true,"12676": true,"12868": true,"13110": true,
+      "13140": true,"11030": true,"1167":  true,"12721": true,
+      "12563": true, "11634": true   /* ← tus últimos arreglos */
     };
   </script>
 
@@ -188,19 +169,16 @@
     function todayISO(){ return new Date().toLocaleString(); }
     function normalizeId(v){
       const s = String(v ?? '').trim();
-      // 1234, "1234", 1234.0, "1234.0" => "1234"
-      if(/^\d+(?:\.0+)?$/.test(s)) return String(parseInt(Number(s),10));
+      if(/^\d+(?:\.0+)?$/.test(s)) return String(parseInt(Number(s),10)); // 1234.0 → "1234"
       return s;
     }
     function rebuildGold(baseMap, patch){
       const out = {};
-      // normalizar claves del GOLD base
       for(const [k,v] of Object.entries(baseMap||{})){
         const id = normalizeId(k);
         if(!id) continue;
         out[id] = !!v;
       }
-      // aplicar parches (también normalizados)
       for(const [k,v] of Object.entries(patch||{})){
         const id = normalizeId(k);
         out[id] = !!v;
@@ -215,11 +193,7 @@
     const fileInput = document.getElementById('fileInput');
     const browseLink = document.getElementById('browseLink');
     const btnValidate = document.getElementById('btnValidate');
-    const btnDownloadDiff = document.getElementById('btnDownloadDiff');
     const resultCard = document.getElementById('resultCard');
-    const summaryList = document.getElementById('summaryList');
-    const diffTable = document.getElementById('diffTable');
-    const details = document.getElementById('details');
     const rankingBody = document.getElementById('rankingBody');
     const teamNameInput = document.getElementById('teamName');
     const matchStrategy = document.getElementById('matchStrategy');
@@ -234,11 +208,8 @@
     browseLink.addEventListener('click', e=>{ e.preventDefault(); fileInput.click(); });
 
     // ======================
-    // VALIDACIÓN PRINCIPAL
+    // VALIDACIÓN PRINCIPAL (SIN COMPARATIVA EN PANTALLA)
     // ======================
-    let lastDiff = [];
-    let lastNotFound = [];
-
     btnValidate.addEventListener('click', async ()=>{
       const file = fileInput.files?.[0];
       if(!file){
@@ -257,12 +228,9 @@
         return;
       }
 
-      // GOLD normalizado + parches
       const GOLD = rebuildGold(GOLD_TRUTH, GOLD_PATCH);
 
-      // Construcción de comparables
       let comparable = [];
-      lastNotFound = [];
       if(matchStrategy.value==='id' && hasId){
         const idIdx = colsLower.indexOf('id');
         for(const r of rows){
@@ -271,20 +239,16 @@
           const pred = toBool(r[header[labelIdx]]);
           const gold = GOLD[id];
           if(typeof gold === 'boolean'){
-            comparable.push({id, pred, gold});
-          } else {
-            lastNotFound.push(id);
+            comparable.push({pred, gold});
           }
         }
       } else {
-        // Por posición de fila (menos recomendado)
         const goldEntries = Object.entries(GOLD);
         const n = Math.min(rows.length, goldEntries.length);
         for(let i=0;i<n;i++){
-          const id = goldEntries[i][0];
-          const gold = goldEntries[i][1];
           const pred = toBool(rows[i][header[labelIdx]]);
-          comparable.push({id, pred, gold});
+          const gold = !!goldEntries[i][1];
+          comparable.push({pred, gold});
         }
       }
 
@@ -296,29 +260,10 @@
       const matches = comparable.filter(r=> r.pred === r.gold).length;
       const pct = matches / comparable.length;
 
-      // UI resultado
+      // Mostrar solo el resultado
       resultCard.classList.remove('d-none','alert-danger','alert-info');
       resultCard.classList.add('alert-info');
       resultCard.innerHTML = `<strong>Resultado:</strong> Coincidencias ${matches} / ${comparable.length} ⇒ <span class="badge text-bg-primary score-badge">${fmtPct(pct)}</span>`;
-
-      // Detalle & tabla diff
-      lastDiff = comparable.map((r,i)=> ({idx:i+1, ...r, ok:(r.pred===r.gold)}));
-      details.classList.remove('d-none');
-      summaryList.innerHTML = `
-        <li>Total comparable: <code>${comparable.length}</code></li>
-        <li>Acertadas: <code>${matches}</code></li>
-        <li>Porcentaje: <span class="badge text-bg-success">${fmtPct(pct)}</span></li>
-        <li>Estrategia: <code>${matchStrategy.value}</code></li>
-        <li>IDs no encontrados en golden: <code>${lastNotFound.length}</code></li>
-      `;
-      diffTable.innerHTML = lastDiff.map(r=> `
-        <tr class="${r.ok? 'table-success' : 'table-danger'}">
-          <td>${r.idx}</td>
-          <td>${r.id}</td>
-          <td>${r.pred}</td>
-          <td>${r.gold}</td>
-          <td>${r.ok? '<i class="bi bi-check2"></i>' : '<i class="bi bi-x-lg"></i>'}</td>
-        </tr>`).join('');
 
       // Ranking (localStorage)
       const entry = { team, pct: +(pct*100).toFixed(4), date: todayISO() };
@@ -326,66 +271,38 @@
       arr.push(entry);
       arr.sort((a,b)=> b.pct - a.pct);
       localStorage.setItem(LS_KEY, JSON.stringify(arr));
-      renderRanking();
+      renderRankingLocal();
 
-      // (Opcional) Guardar también en Realtime DB si cargaste Firebase
+      // (Opcional) Guardar también en Realtime DB si está disponible
       if (window.saveRankingToRTDB) {
         window.saveRankingToRTDB(entry);
       }
-
-      // Habilitar descarga de diferencias
-      btnDownloadDiff.disabled = false;
     });
 
-    btnDownloadDiff.addEventListener('click', ()=>{
-      if(!lastDiff?.length) return;
-      const header = ['idx','ID','Predicho','Esperado','Coincide'];
-      const lines = [header.join(',')].concat(
-        lastDiff.map(r=> [r.idx, r.id, r.pred, r.gold, r.ok].join(','))
-      );
-      const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8;'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'diferencias.csv'; a.click();
-      URL.revokeObjectURL(url);
-    });
-
-    function renderRanking(){
-      const arr = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+    // ====== RANKING: render desde array (para RTDB) y desde localStorage ======
+    function renderRankingFromArray(arr){
       rankingBody.innerHTML = arr.map((r,i)=> `
         <tr>
           <td>${i+1}</td>
           <td>${r.team}</td>
-          <td><span class="small text-muted">${r.date}</span></td>
-          <td class="text-end fw-semibold">${r.pct.toFixed(2)}%</td>
+          <td><span class="small text-muted">${r.date ?? ''}</span></td>
+          <td class="text-end fw-semibold">${(+r.pct).toFixed(2)}%</td>
         </tr>
       `).join('');
     }
-
-    document.getElementById('btnClearRanking').addEventListener('click', ()=>{
-      if(confirm('¿Eliminar el ranking guardado en este navegador?')){
-        localStorage.removeItem(LS_KEY);
-        renderRanking();
-      }
-    });
-    document.getElementById('btnExportRanking').addEventListener('click', ()=>{
+    function renderRankingLocal(){
       const arr = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
-      const header = ['pos','equipo','fecha','porcentaje'];
-      const lines = [header.join(',')].concat(arr.map((r,i)=> [i+1, r.team, r.date, r.pct].join(',')));
-      const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8;'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = 'ranking.csv'; a.click();
-      URL.revokeObjectURL(url);
-    });
+      renderRankingFromArray(arr);
+    }
 
-    // Inicial
-    renderRanking();
+    // Inicial (si no hay RTDB, se verá el local)
+    renderRankingLocal();
   </script>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- Firebase (opcional) para Realtime Database -->
+  <!-- Firebase (Realtime Database) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
     import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
@@ -410,7 +327,7 @@
       await signInAnonymously(auth);
       const db = getDatabase(app);
 
-      // Guardar ranking
+      // Guardar ranking en RTDB
       window.saveRankingToRTDB = async function(entry) {
         const payload = {
           team: entry.team,
@@ -422,18 +339,19 @@
         await push(ref(db, "rankings"), payload);
       };
 
-      // (Opcional) Escuchar ranking remoto
-      window.listenRankingFromRTDB = function(render) {
-        const q = query(ref(db, "rankings"), orderByChild("negPct"), limitToFirst(100));
-        return onValue(q, (snap) => {
-          const arr = [];
-          snap.forEach(child => arr.push(child.val()));
-          render(arr);
-        }, (err) => console.error("Error leyendo ranking:", err));
-      };
+      // Escuchar TOP 100 por % desc (via negPct)
+      const q = query(ref(db, "rankings"), orderByChild("negPct"), limitToFirst(100));
+      onValue(q, (snap) => {
+        const arr = [];
+        snap.forEach(child => arr.push(child.val())); // ya viene desc
+        // Pintar ranking remoto (si hay datos, desplaza al local)
+        if (arr.length) {
+          window.renderRankingFromArray(arr);
+        }
+      }, (err) => console.error("Error leyendo ranking RTDB:", err));
 
     }catch(e){
-      console.warn("Firebase no inicializado (continuás sólo con localStorage).", e);
+      console.warn("Firebase no inicializado (seguís con localStorage).", e);
     }
   </script>
 </body>
