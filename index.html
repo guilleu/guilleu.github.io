@@ -1105,8 +1105,10 @@
       resultCard.classList.add('alert-info');
       resultCard.innerHTML = `<strong>Resultado:</strong> Coincidencias ${matches} / ${comparable.length} ⇒ <span class="badge text-bg-primary score-badge">${fmtPct(pct)}</span>`;
 
+
       // Ranking local (guarda createdAt para resolver empates)
       const entry = { team, challenge, pct: +(pct * 100).toFixed(4), date: todayISO(), createdAt: Date.now() };
+      const arr = JSON.parse(localStorage.getItem(LS_KEY) || '[]'); // <-- AGREGA ESTA LÍNEA
       arr.push(entry);
       localStorage.setItem(LS_KEY, JSON.stringify(arr));
       renderRankingLocal();
