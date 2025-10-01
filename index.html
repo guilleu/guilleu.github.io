@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="es">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -9,16 +10,48 @@
   <!-- Bootstrap Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <style>
-    :root{ --grad-a:#0ea5e9; --grad-b:#22c55e; --ink:#0f172a; }
-    body{background:linear-gradient(120deg,var(--grad-a) 0%, var(--grad-b) 100%) fixed;}
-    .glass{backdrop-filter: blur(8px); background: rgba(255,255,255,.75); border: 1px solid rgba(255,255,255,.4);}
-    .brand-badge{letter-spacing:.08em}
-    .drop-zone{border:2px dashed #6c757d; border-radius:1rem; padding:2rem; transition: all .2s}
-    .drop-zone.drag{border-color:#0d6efd; background:#e7f1ff}
-    .score-badge{font-variant-numeric: tabular-nums;}
-    footer a{color:inherit}
+    :root {
+      --grad-a: #0ea5e9;
+      --grad-b: #22c55e;
+      --ink: #0f172a;
+    }
+
+    body {
+      background: linear-gradient(120deg, var(--grad-a) 0%, var(--grad-b) 100%) fixed;
+    }
+
+    .glass {
+      backdrop-filter: blur(8px);
+      background: rgba(255, 255, 255, .75);
+      border: 1px solid rgba(255, 255, 255, .4);
+    }
+
+    .brand-badge {
+      letter-spacing: .08em
+    }
+
+    .drop-zone {
+      border: 2px dashed #6c757d;
+      border-radius: 1rem;
+      padding: 2rem;
+      transition: all .2s
+    }
+
+    .drop-zone.drag {
+      border-color: #0d6efd;
+      background: #e7f1ff
+    }
+
+    .score-badge {
+      font-variant-numeric: tabular-nums;
+    }
+
+    footer a {
+      color: inherit
+    }
   </style>
 </head>
+
 <body>
   <header class="container py-4">
     <div class="d-flex justify-content-between align-items-center text-white">
@@ -26,13 +59,22 @@
         <i class="bi bi-graph-up-arrow fs-2"></i>
         <div>
           <h1 class="h3 mb-0 fw-bold">Validador de <span class="brand-badge">ETIQUETAS</span></h1>
-          <small class="opacity-75">Subí un CSV y obtené el % de coincidencia. Se guarda un ranking local y (opcional) en Firebase.</small>
+          <small class="opacity-75">Subí un CSV y obtené el % de coincidencia. Se guarda un ranking local y (opcional)
+            en Firebase.</small>
         </div>
       </div>
       <span class="badge rounded-pill text-bg-light text-dark">Bootstrap 5</span>
     </div>
   </header>
-
+  <!-- Challenge FakeNews Title -->
+  <div class="container mb-4">
+    <div class="glass rounded-4 p-3 text-center shadow-sm">
+      <h2 class="fw-bold mb-1" style="color: var(--ink); letter-spacing: .04em;">
+        Challenge <span style="color: var(--grad-a);">FakeNews</span>
+      </h2>
+      <div class="text-muted">¡Poné a prueba tu modelo de detección de noticias falsas!</div>
+    </div>
+  </div>
   <main class="container pb-5">
     <div class="row g-4">
       <!-- Panel de carga y resultado -->
@@ -45,18 +87,28 @@
               <div class="col-sm-12">
                 <label class="form-label mb-1">Nombre de equipo / modelo</label>
                 <input id="teamName" type="text" class="form-control" placeholder="Ej: Grupo 4 True · v3" />
+                <div class="col-sm-12">
+                  <label class="form-label mb-1">Competencia</label>
+                  <select id="challengeSelect" class="form-select">
+                    <option value="FakeNews">FakeNews</option>
+                    <option value="OtroChallenge">OtroChallenge</option>
+                    <!-- Agrega más opciones aquí en el futuro -->
+                  </select>
+                </div>
               </div>
             </div>
 
             <div id="dropZone" class="drop-zone text-center mb-3">
               <input id="fileInput" type="file" accept=".csv" class="d-none" />
               <p class="mb-2"><i class="bi bi-filetype-csv fs-2"></i></p>
-              <p class="mb-2">Arrastrá y soltá tu <strong>CSV</strong> aquí, o <a href="#" id="browseLink">buscalo</a>.</p>
+              <p class="mb-2">Arrastrá y soltá tu <strong>CSV</strong> aquí, o <a href="#" id="browseLink">buscalo</a>.
+              </p>
               <small class="text-muted">Se requieren las columnas <code>ID</code> y <code>Etiqueta</code>.</small>
             </div>
 
             <div class="d-flex gap-2 mb-3">
-              <button id="btnValidate" class="btn btn-primary"><i class="bi bi-check2-circle"></i> Validar coincidencia</button>
+              <button id="btnValidate" class="btn btn-primary"><i class="bi bi-check2-circle"></i> Validar
+                coincidencia</button>
             </div>
 
             <div id="resultCard" class="alert alert-info d-none" role="alert"></div>
@@ -71,17 +123,21 @@
             <div class="d-flex justify-content-between align-items-center mb-2">
               <h2 class="h5 mb-0"><i class="bi bi-trophy"></i> Ranking de mejores porcentajes</h2>
               <div class="btn-group">
-                <button id="btnClearRanking" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash3"></i> Limpiar</button>
-                <button id="btnExportRanking" class="btn btn-sm btn-outline-primary"><i class="bi bi-box-arrow-down"></i> Exportar</button>
+                <button id="btnClearRanking" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash3"></i>
+                  Limpiar</button>
+                <button id="btnExportRanking" class="btn btn-sm btn-outline-primary"><i
+                    class="bi bi-box-arrow-down"></i> Exportar</button>
               </div>
             </div>
-            <p class="text-muted small">Se guarda en <code>localStorage</code> (y en Firebase si está disponible). Ordenado por % desc; en empate gana quien lo obtuvo primero.</p>
+            <p class="text-muted small">Se guarda en <code>localStorage</code> (y en Firebase si está disponible).
+              Ordenado por % desc; en empate gana quien lo obtuvo primero.</p>
             <div class="table-responsive">
               <table class="table table-hover align-middle">
                 <thead>
                   <tr>
                     <th>#</th>
                     <th>Equipo / Modelo</th>
+                    <th>Competencia</th>
                     <th>Fecha</th>
                     <th class="text-end">% Coincidencia</th>
                   </tr>
@@ -96,8 +152,9 @@
     </div>
   </main>
 
-  <footer class="container pb-4">
-    <div class="glass rounded-4 p-3 text-center small text-muted">
+  <footer class="position-fixed bottom-0 start-0 end-0 pb-2" style="z-index:1050; pointer-events: none;">
+    <div class="glass rounded-4 p-3 text-center small text-muted mx-auto shadow"
+      style="max-width:600px; pointer-events: auto;">
       CERP del Litoral Salto - Profesorado de Informática - Prof. Guillermo Uscudum
     </div>
   </footer>
@@ -106,793 +163,793 @@
        DATOS ESPERADOS EMBEBIDOS
        ====================== -->
   <script>
-const GOLD_TRUTH = {
-  "12130": false,
-  "6418": false,
-  "191": false,
-  "13373": false,
-  "8078": false,
-  "5656": false,
-  "12699": true,
-  "5696": false,
-  "12797": false,
-  "12854": true,
-  "7799": false,
-  "3890": false,
-  "10038": false,
-  "5188": false,
-  "12590": false,
-  "4257": false,
-  "724": true,
-  "11860": false,
-  "2125": false,
-  "12444": false,
-  "4237": true,
-  "606": false,
-  "2517": false,
-  "4516": false,
-  "9816": true,
-  "155": false,
-  "11633": true,
-  "3446": false,
-  "9598": false,
-  "12856": false,
-  "1827": false,
-  "6360": true,
-  "4752": true,
-  "10054": false,
-  "1718": true,
-  "532": false,
-  "11245": false,
-  "10032": false,
-  "10130": true,
-  "3301": true,
-  "10066": false,
-  "12363": false,
-  "4723": true,
-  "2185": false,
-  "3652": false,
-  "2602": false,
-  "10573": false,
-  "11136": true,
-  "11446": false,
-  "11077": false,
-  "10787": true,
-  "4870": false,
-  "12755": true,
-  "3527": true,
-  "2461": false,
-  "787": true,
-  "6593": false,
-  "1429": true,
-  "9132": true,
-  "8876": false,
-  "13194": false,
-  "4335": false,
-  "7403": false,
-  "10496": false,
-  "668": false,
-  "4046": false,
-  "3611": false,
-  "6151": true,
-  "1080": false,
-  "10491": false,
-  "10955": false,
-  "2960": false,
-  "13195": false,
-  "5998": true,
-  "5683": true,
-  "11527": false,
-  "1612": true,
-  "10640": false,
-  "5141": true,
-  "5929": true,
-  "5676": true,
-  "1440": false,
-  "3256": false,
-  "8987": true,
-  "3494": true,
-  "7284": true,
-  "1258": false,
-  "5149": true,
-  "11398": true,
-  "10718": true,
-  "7764": true,
-  "13197": false,
-  "12796": true,
-  "3982": false,
-  "2238": true,
-  "4133": true,
-  "9059": false,
-  "7938": false,
-  "12857": false,
-  "12831": false,
-  "13207": true,
-  "11934": true,
-  "3525": false,
-  "4064": false,
-  "9335": false,
-  "10723": true,
-  "7222": true,
-  "8064": false,
-  "9508": false,
-  "632": false,
-  "6267": true,
-  "3073": false,
-  "296": true,
-  "5634": false,
-  "9533": true,
-  "9453": false,
-  "7025": false,
-  "8958": true,
-  "8543": false,
-  "11097": true,
-  "11371": false,
-  "1421": true,
-  "4012": false,
-  "4286": false,
-  "11006": false,
-  "305": false,
-  "3940": false,
-  "3556": true,
-  "97": true,
-  "9271": false,
-  "5932": false,
-  "2632": false,
-  "7671": false,
-  "11349": false,
-  "8481": false,
-  "7761": false,
-  "9065": true,
-  "9838": true,
-  "13118": true,
-  "9043": false,
-  "350": false,
-  "8813": false,
-  "5845": false,
-  "7902": false,
-  "5899": true,
-  "4": true,
-  "11552": true,
-  "9322": true,
-  "10703": true,
-  "12265": false,
-  "2134": false,
-  "7613": true,
-  "5400": false,
-  "7128": true,
-  "9022": true,
-  "3834": false,
-  "9058": false,
-  "8825": true,
-  "6726": false,
-  "6786": false,
-  "11673": true,
-  "8739": true,
-  "6729": true,
-  "2822": true,
-  "11111": false,
-  "1436": true,
-  "9394": false,
-  "2871": false,
-  "11179": false,
-  "382": false,
-  "4733": false,
-  "11120": true,
-  "1071": false,
-  "1603": true,
-  "10154": true,
-  "11206": false,
-  "13323": true,
-  "13103": false,
-  "4738": true,
-  "4713": true,
-  "11453": false,
-  "2492": false,
-  "3701": true,
-  "5070": false,
-  "7239": false,
-  "10523": false,
-  "7507": true,
-  "1595": false,
-  "8976": false,
-  "3208": true,
-  "3962": true,
-  "4896": false,
-  "11110": false,
-  "2147": false,
-  "11130": false,
-  "1110": true,
-  "4976": true,
-  "13057": true,
-  "12923": false,
-  "7571": true,
-  "4311": true,
-  "12692": true,
-  "520": true,
-  "6512": true,
-  "3684": false,
-  "1011": false,
-  "8742": true,
-  "8130": true,
-  "7415": false,
-  "6715": false,
-  "9407": true,
-  "6056": true,
-  "7351": true,
-  "9490": false,
-  "3181": false,
-  "2824": true,
-  "5324": false,
-  "3892": true,
-  "11877": true,
-  "13325": true,
-  "1053": true,
-  "6855": true,
-  "7001": false,
-  "3384": true,
-  "4443": true,
-  "8801": true,
-  "5627": true,
-  "3019": true,
-  "11853": false,
-  "5550": true,
-  "9775": false,
-  "10921": true,
-  "4379": false,
-  "8734": true,
-  "5644": true,
-  "1306": false,
-  "5495": false,
-  "2789": false,
-  "2965": false,
-  "12491": false,
-  "543": true,
-  "3858": true,
-  "3529": true,
-  "8119": true,
-  "489": true,
-  "11387": true,
-  "2141": true,
-  "8693": false,
-  "2091": false,
-  "5987": true,
-  "5168": false,
-  "1704": false,
-  "5679": false,
-  "12972": true,
-  "3360": true,
-  "10346": false,
-  "7000": true,
-  "12114": true,
-  "4013": false,
-  "10006": false,
-  "3056": true,
-  "1391": true,
-  "1288": false,
-  "11021": true,
-  "7745": false,
-  "802": false,
-  "10266": false,
-  "8664": false,
-  "10503": false,
-  "4020": false,
-  "4230": false,
-  "5714": false,
-  "12916": false,
-  "1812": true,
-  "10439": true,
-  "11589": false,
-  "3475": false,
-  "1076": true,
-  "7248": true,
-  "5808": false,
-  "11067": true,
-  "11700": false,
-  "10879": false,
-  "8770": true,
-  "6155": false,
-  "6997": true,
-  "6946": false,
-  "12351": false,
-  "11902": true,
-  "10409": true,
-  "6683": true,
-  "7888": true,
-  "3343": false,
-  "10165": false,
-  "3118": false,
-  "12028": false,
-  "12552": true,
-  "4009": true,
-  "6004": true,
-  "8112": false,
-  "3917": true,
-  "11305": false,
-  "10651": false,
-  "3677": true,
-  "3169": true,
-  "5385": true,
-  "742": false,
-  "6008": true,
-  "4685": true,
-  "1185": true,
-  "181": true,
-  "13240": false,
-  "12993": true,
-  "12727": false,
-  "12634": true,
-  "6449": false,
-  "11506": false,
-  "1218": false,
-  "5976": true,
-  "6108": false,
-  "4849": false,
-  "6676": false,
-  "7864": false,
-  "12868": true,
-  "6779": false,
-  "4428": false,
-  "12048": true,
-  "11719": false,
-  "6820": true,
-  "1295": false,
-  "6883": false,
-  "3111": false,
-  "8823": true,
-  "12111": true,
-  "9074": true,
-  "1979": true,
-  "9027": true,
-  "11822": true,
-  "3622": true,
-  "5493": true,
-  "9399": true,
-  "252": false,
-  "9919": true,
-  "557": false,
-  "5667": false,
-  "4027": false,
-  "11470": true,
-  "9421": false,
-  "987": false,
-  "7866": true,
-  "256": true,
-  "2214": true,
-  "8826": false,
-  "2943": true,
-  "8725": true,
-  "13149": false,
-  "628": false,
-  "696": false,
-  "11728": false,
-  "4989": false,
-  "6019": false,
-  "4419": true,
-  "486": true,
-  "2636": true,
-  "8997": true,
-  "7176": true,
-  "1481": false,
-  "744": false,
-  "6149": true,
-  "4343": false,
-  "3164": false,
-  "2263": true,
-  "10586": false,
-  "12676": true,
-  "12761": false,
-  "9536": true,
-  "10188": false,
-  "13228": false,
-  "2387": false,
-  "5632": true,
-  "8783": true,
-  "5879": false,
-  "1580": false,
-  "11634": true,
-  "600": true,
-  "1627": false,
-  "10692": false,
-  "1757": true,
-  "12536": true,
-  "13520": true,
-  "4832": false,
-  "10093": false,
-  "10237": true,
-  "13498": false,
-  "10472": false,
-  "9993": false,
-  "8704": true,
-  "5334": true,
-  "6044": false,
-  "7729": false,
-  "12191": false,
-  "1544": true,
-  "10427": false,
-  "10350": false,
-  "7546": true,
-  "11125": false,
-  "10656": true,
-  "10738": false,
-  "9563": true,
-  "10383": true,
-  "12828": false,
-  "5534": false,
-  "6136": false,
-  "13362": false,
-  "395": false,
-  "11089": false,
-  "162": false,
-  "6673": false,
-  "1678": true,
-  "4861": false,
-  "2665": true,
-  "4493": false,
-  "1547": true,
-  "3705": true,
-  "5312": false,
-  "10428": true,
-  "9734": true,
-  "7366": false,
-  "3629": true,
-  "8299": true,
-  "9430": true,
-  "830": false,
-  "11671": false,
-  "3342": false,
-  "3799": false,
-  "4026": true,
-  "832": true,
-  "12721": true,
-  "11749": true,
-  "4378": false,
-  "4328": true,
-  "2452": false,
-  "2347": false,
-  "3969": true,
-  "1045": false,
-  "8771": true,
-  "6222": false,
-  "1566": true,
-  "7119": true,
-  "3299": false,
-  "9163": false,
-  "9591": false,
-  "9363": true,
-  "6930": true,
-  "9475": false,
-  "4206": false,
-  "2620": false,
-  "2383": false,
-  "7307": true,
-  "2502": false,
-  "1993": true,
-  "2364": true,
-  "11784": false,
-  "2354": true,
-  "8755": false,
-  "5965": true,
-  "3397": false,
-  "10016": false,
-  "5720": true,
-  "4744": true,
-  "2163": false,
-  "7984": false,
-  "189": true,
-  "6670": false,
-  "10277": false,
-  "10994": true,
-  "3734": true,
-  "5765": false,
-  "12253": false,
-  "2963": false,
-  "916": false,
-  "3695": false,
-  "8535": false,
-  "10863": false,
-  "12088": false,
-  "138": true,
-  "1216": true,
-  "12018": false,
-  "2293": true,
-  "12922": false,
-  "11003": false,
-  "7326": true,
-  "4163": true,
-  "13071": false,
-  "10795": false,
-  "3020": false,
-  "2921": true,
-  "4485": true,
-  "1253": true,
-  "6542": false,
-  "676": false,
-  "1824": true,
-  "11495": true,
-  "1745": true,
-  "10008": false,
-  "6619": false,
-  "1446": true,
-  "617": false,
-  "13296": true,
-  "10292": true,
-  "11644": false,
-  "11608": false,
-  "6803": false,
-  "10062": false,
-  "501": true,
-  "9083": false,
-  "9218": true,
-  "3921": true,
-  "11377": false,
-  "7589": false,
-  "9277": false,
-  "9925": false,
-  "13168": false,
-  "1871": false,
-  "249": true,
-  "11884": false,
-  "5860": true,
-  "11091": false,
-  "2998": true,
-  "4667": false,
-  "8479": false,
-  "7951": true,
-  "5513": true,
-  "8580": false,
-  "13379": false,
-  "7470": false,
-  "2706": false,
-  "9170": false,
-  "8207": true,
-  "2631": false,
-  "12626": false,
-  "1204": true,
-  "2588": true,
-  "11836": true,
-  "6390": true,
-  "5728": false,
-  "9148": false,
-  "7901": true,
-  "106": true,
-  "1073": false,
-  "6316": false,
-  "1763": false,
-  "3427": true,
-  "3610": false,
-  "2310": false,
-  "10261": true,
-  "1000": false,
-  "5276": true,
-  "11410": false,
-  "9691": true,
-  "1354": false,
-  "7965": true,
-  "158": false,
-  "7029": false,
-  "4275": true,
-  "2183": false,
-  "3238": false,
-  "8677": false,
-  "8885": true,
-  "7548": true,
-  "3490": false,
-  "11078": false,
-  "10892": false,
-  "5893": true,
-  "1761": true,
-  "5651": false,
-  "9014": false,
-  "2459": true,
-  "1123": false,
-  "8556": false,
-  "8451": false,
-  "5391": true,
-  "6983": true,
-  "12861": false,
-  "12689": false,
-  "2944": false,
-  "5767": true,
-  "10053": true,
-  "1764": true,
-  "3388": false,
-  "7682": true,
-  "1425": false,
-  "1298": true,
-  "949": false,
-  "12000": true,
-  "6268": true,
-  "11905": false,
-  "1614": true,
-  "6672": true,
-  "200": true,
-  "12801": true,
-  "1962": true,
-  "6118": false,
-  "3476": false,
-  "8388": true,
-  "5358": true,
-  "5308": false,
-  "8003": true,
-  "5167": true,
-  "11830": false,
-  "12973": false,
-  "6227": true,
-  "2423": false,
-  "3911": true,
-  "3557": false,
-  "3714": false,
-  "6314": false,
-  "8233": false,
-  "8497": false,
-  "10121": true,
-  "3492": false,
-  "8890": false,
-  "12125": true,
-  "9024": true,
-  "7800": false,
-  "5038": true,
-  "2512": false,
-  "13067": false,
-  "10196": true,
-  "5402": true,
-  "1636": false,
-  "573": false,
-  "8063": false,
-  "5298": true,
-  "1584": false,
-  "10418": true,
-  "6730": true,
-  "5793": false,
-  "4448": false,
-  "13282": false,
-  "9551": false,
-  "1553": true,
-  "4490": false,
-  "26": true,
-  "3302": true,
-  "11528": false,
-  "10760": true,
-  "3408": true,
-  "10285": true,
-  "4677": false,
-  "2932": true,
-  "10889": true,
-  "8971": false,
-  "9725": false,
-  "10184": false,
-  "9158": true,
-  "2033": false,
-  "8283": false,
-  "2790": true,
-  "11862": false,
-  "6377": true,
-  "11930": false,
-  "12580": true,
-  "8829": true,
-  "6174": false,
-  "12687": false,
-  "3644": true,
-  "8152": true,
-  "651": true,
-  "9414": false,
-  "4785": true,
-  "4595": false,
-  "8435": true,
-  "3213": true,
-  "11144": false,
-  "7072": false,
-  "4113": true,
-  "706": false,
-  "12367": false,
-  "4764": false,
-  "3986": false,
-  "7427": true,
-  "4701": true,
-  "13357": true,
-  "11892": true,
-  "4316": false,
-  "5133": false,
-  "6079": false,
-  "7137": true,
-  "7104": false,
-  "4812": true,
-  "2579": true,
-  "10172": false,
-  "5944": false,
-  "8123": false,
-  "11735": false,
-  "10384": false,
-  "11": true,
-  "356": true,
-  "7625": true,
-  "1767": false,
-  "12219": false,
-  "4585": false,
-  "1762": false,
-  "7842": false,
-  "8395": false,
-  "5524": true,
-  "1343": true,
-  "6507": false,
-  "4776": false,
-  "6068": true,
-  "2103": true,
-  "2389": true,
-  "5323": true,
-  "8410": false,
-  "4504": false,
-  "1167": true,
-  "9611": false,
-  "6842": true,
-  "4384": false,
-  "1666": true,
-  "12470": false,
-  "11030": true,
-  "7700": true,
-  "5587": false,
-  "10118": false,
-  "5629": false,
-  "5355": true,
-  "3355": false,
-  "9149": false,
-  "4681": true,
-  "8808": true,
-  "9882": false,
-  "10765": true,
-  "8028": true,
-  "778": false,
-  "4852": true,
-  "10922": true,
-  "11835": false,
-  "2809": false,
-  "1393": true,
-  "828": false,
-  "5936": false,
-  "11896": false,
-  "6964": true,
-  "1456": false,
-  "8892": true,
-  "959": true,
-  "13110": true,
-  "5437": false,
-  "6024": false,
-  "7167": false,
-  "3140": false,
-  "10891": false,
-  "10105": false,
-  "6343": false,
-  "6790": false,
-  "6566": false,
-  "9673": false,
-  "10570": true,
-  "13140": true,
-  "3339": true,
-  "6744": false,
-  "5445": false,
-  "3570": false,
-  "12563": true,
-  "2463": false,
-  "2013": true,
-  "927": true,
-  "5236": false,
-  "1326": false,
-  "12942": false,
-  "9941": false,
-  "6534": true,
-  "1378": false,
-  "8845": true,
-  "3866": false,
-  "11524": false,
-  "6310": true,
-  "6915": false,
-  "5215": true,
-  "13114": false
-};
+    const GOLD_TRUTH = {
+      "12130": false,
+      "6418": false,
+      "191": false,
+      "13373": false,
+      "8078": false,
+      "5656": false,
+      "12699": true,
+      "5696": false,
+      "12797": false,
+      "12854": true,
+      "7799": false,
+      "3890": false,
+      "10038": false,
+      "5188": false,
+      "12590": false,
+      "4257": false,
+      "724": true,
+      "11860": false,
+      "2125": false,
+      "12444": false,
+      "4237": true,
+      "606": false,
+      "2517": false,
+      "4516": false,
+      "9816": true,
+      "155": false,
+      "11633": true,
+      "3446": false,
+      "9598": false,
+      "12856": false,
+      "1827": false,
+      "6360": true,
+      "4752": true,
+      "10054": false,
+      "1718": true,
+      "532": false,
+      "11245": false,
+      "10032": false,
+      "10130": true,
+      "3301": true,
+      "10066": false,
+      "12363": false,
+      "4723": true,
+      "2185": false,
+      "3652": false,
+      "2602": false,
+      "10573": false,
+      "11136": true,
+      "11446": false,
+      "11077": false,
+      "10787": true,
+      "4870": false,
+      "12755": true,
+      "3527": true,
+      "2461": false,
+      "787": true,
+      "6593": false,
+      "1429": true,
+      "9132": true,
+      "8876": false,
+      "13194": false,
+      "4335": false,
+      "7403": false,
+      "10496": false,
+      "668": false,
+      "4046": false,
+      "3611": false,
+      "6151": true,
+      "1080": false,
+      "10491": false,
+      "10955": false,
+      "2960": false,
+      "13195": false,
+      "5998": true,
+      "5683": true,
+      "11527": false,
+      "1612": true,
+      "10640": false,
+      "5141": true,
+      "5929": true,
+      "5676": true,
+      "1440": false,
+      "3256": false,
+      "8987": true,
+      "3494": true,
+      "7284": true,
+      "1258": false,
+      "5149": true,
+      "11398": true,
+      "10718": true,
+      "7764": true,
+      "13197": false,
+      "12796": true,
+      "3982": false,
+      "2238": true,
+      "4133": true,
+      "9059": false,
+      "7938": false,
+      "12857": false,
+      "12831": false,
+      "13207": true,
+      "11934": true,
+      "3525": false,
+      "4064": false,
+      "9335": false,
+      "10723": true,
+      "7222": true,
+      "8064": false,
+      "9508": false,
+      "632": false,
+      "6267": true,
+      "3073": false,
+      "296": true,
+      "5634": false,
+      "9533": true,
+      "9453": false,
+      "7025": false,
+      "8958": true,
+      "8543": false,
+      "11097": true,
+      "11371": false,
+      "1421": true,
+      "4012": false,
+      "4286": false,
+      "11006": false,
+      "305": false,
+      "3940": false,
+      "3556": true,
+      "97": true,
+      "9271": false,
+      "5932": false,
+      "2632": false,
+      "7671": false,
+      "11349": false,
+      "8481": false,
+      "7761": false,
+      "9065": true,
+      "9838": true,
+      "13118": true,
+      "9043": false,
+      "350": false,
+      "8813": false,
+      "5845": false,
+      "7902": false,
+      "5899": true,
+      "4": true,
+      "11552": true,
+      "9322": true,
+      "10703": true,
+      "12265": false,
+      "2134": false,
+      "7613": true,
+      "5400": false,
+      "7128": true,
+      "9022": true,
+      "3834": false,
+      "9058": false,
+      "8825": true,
+      "6726": false,
+      "6786": false,
+      "11673": true,
+      "8739": true,
+      "6729": true,
+      "2822": true,
+      "11111": false,
+      "1436": true,
+      "9394": false,
+      "2871": false,
+      "11179": false,
+      "382": false,
+      "4733": false,
+      "11120": true,
+      "1071": false,
+      "1603": true,
+      "10154": true,
+      "11206": false,
+      "13323": true,
+      "13103": false,
+      "4738": true,
+      "4713": true,
+      "11453": false,
+      "2492": false,
+      "3701": true,
+      "5070": false,
+      "7239": false,
+      "10523": false,
+      "7507": true,
+      "1595": false,
+      "8976": false,
+      "3208": true,
+      "3962": true,
+      "4896": false,
+      "11110": false,
+      "2147": false,
+      "11130": false,
+      "1110": true,
+      "4976": true,
+      "13057": true,
+      "12923": false,
+      "7571": true,
+      "4311": true,
+      "12692": true,
+      "520": true,
+      "6512": true,
+      "3684": false,
+      "1011": false,
+      "8742": true,
+      "8130": true,
+      "7415": false,
+      "6715": false,
+      "9407": true,
+      "6056": true,
+      "7351": true,
+      "9490": false,
+      "3181": false,
+      "2824": true,
+      "5324": false,
+      "3892": true,
+      "11877": true,
+      "13325": true,
+      "1053": true,
+      "6855": true,
+      "7001": false,
+      "3384": true,
+      "4443": true,
+      "8801": true,
+      "5627": true,
+      "3019": true,
+      "11853": false,
+      "5550": true,
+      "9775": false,
+      "10921": true,
+      "4379": false,
+      "8734": true,
+      "5644": true,
+      "1306": false,
+      "5495": false,
+      "2789": false,
+      "2965": false,
+      "12491": false,
+      "543": true,
+      "3858": true,
+      "3529": true,
+      "8119": true,
+      "489": true,
+      "11387": true,
+      "2141": true,
+      "8693": false,
+      "2091": false,
+      "5987": true,
+      "5168": false,
+      "1704": false,
+      "5679": false,
+      "12972": true,
+      "3360": true,
+      "10346": false,
+      "7000": true,
+      "12114": true,
+      "4013": false,
+      "10006": false,
+      "3056": true,
+      "1391": true,
+      "1288": false,
+      "11021": true,
+      "7745": false,
+      "802": false,
+      "10266": false,
+      "8664": false,
+      "10503": false,
+      "4020": false,
+      "4230": false,
+      "5714": false,
+      "12916": false,
+      "1812": true,
+      "10439": true,
+      "11589": false,
+      "3475": false,
+      "1076": true,
+      "7248": true,
+      "5808": false,
+      "11067": true,
+      "11700": false,
+      "10879": false,
+      "8770": true,
+      "6155": false,
+      "6997": true,
+      "6946": false,
+      "12351": false,
+      "11902": true,
+      "10409": true,
+      "6683": true,
+      "7888": true,
+      "3343": false,
+      "10165": false,
+      "3118": false,
+      "12028": false,
+      "12552": true,
+      "4009": true,
+      "6004": true,
+      "8112": false,
+      "3917": true,
+      "11305": false,
+      "10651": false,
+      "3677": true,
+      "3169": true,
+      "5385": true,
+      "742": false,
+      "6008": true,
+      "4685": true,
+      "1185": true,
+      "181": true,
+      "13240": false,
+      "12993": true,
+      "12727": false,
+      "12634": true,
+      "6449": false,
+      "11506": false,
+      "1218": false,
+      "5976": true,
+      "6108": false,
+      "4849": false,
+      "6676": false,
+      "7864": false,
+      "12868": true,
+      "6779": false,
+      "4428": false,
+      "12048": true,
+      "11719": false,
+      "6820": true,
+      "1295": false,
+      "6883": false,
+      "3111": false,
+      "8823": true,
+      "12111": true,
+      "9074": true,
+      "1979": true,
+      "9027": true,
+      "11822": true,
+      "3622": true,
+      "5493": true,
+      "9399": true,
+      "252": false,
+      "9919": true,
+      "557": false,
+      "5667": false,
+      "4027": false,
+      "11470": true,
+      "9421": false,
+      "987": false,
+      "7866": true,
+      "256": true,
+      "2214": true,
+      "8826": false,
+      "2943": true,
+      "8725": true,
+      "13149": false,
+      "628": false,
+      "696": false,
+      "11728": false,
+      "4989": false,
+      "6019": false,
+      "4419": true,
+      "486": true,
+      "2636": true,
+      "8997": true,
+      "7176": true,
+      "1481": false,
+      "744": false,
+      "6149": true,
+      "4343": false,
+      "3164": false,
+      "2263": true,
+      "10586": false,
+      "12676": true,
+      "12761": false,
+      "9536": true,
+      "10188": false,
+      "13228": false,
+      "2387": false,
+      "5632": true,
+      "8783": true,
+      "5879": false,
+      "1580": false,
+      "11634": true,
+      "600": true,
+      "1627": false,
+      "10692": false,
+      "1757": true,
+      "12536": true,
+      "13520": true,
+      "4832": false,
+      "10093": false,
+      "10237": true,
+      "13498": false,
+      "10472": false,
+      "9993": false,
+      "8704": true,
+      "5334": true,
+      "6044": false,
+      "7729": false,
+      "12191": false,
+      "1544": true,
+      "10427": false,
+      "10350": false,
+      "7546": true,
+      "11125": false,
+      "10656": true,
+      "10738": false,
+      "9563": true,
+      "10383": true,
+      "12828": false,
+      "5534": false,
+      "6136": false,
+      "13362": false,
+      "395": false,
+      "11089": false,
+      "162": false,
+      "6673": false,
+      "1678": true,
+      "4861": false,
+      "2665": true,
+      "4493": false,
+      "1547": true,
+      "3705": true,
+      "5312": false,
+      "10428": true,
+      "9734": true,
+      "7366": false,
+      "3629": true,
+      "8299": true,
+      "9430": true,
+      "830": false,
+      "11671": false,
+      "3342": false,
+      "3799": false,
+      "4026": true,
+      "832": true,
+      "12721": true,
+      "11749": true,
+      "4378": false,
+      "4328": true,
+      "2452": false,
+      "2347": false,
+      "3969": true,
+      "1045": false,
+      "8771": true,
+      "6222": false,
+      "1566": true,
+      "7119": true,
+      "3299": false,
+      "9163": false,
+      "9591": false,
+      "9363": true,
+      "6930": true,
+      "9475": false,
+      "4206": false,
+      "2620": false,
+      "2383": false,
+      "7307": true,
+      "2502": false,
+      "1993": true,
+      "2364": true,
+      "11784": false,
+      "2354": true,
+      "8755": false,
+      "5965": true,
+      "3397": false,
+      "10016": false,
+      "5720": true,
+      "4744": true,
+      "2163": false,
+      "7984": false,
+      "189": true,
+      "6670": false,
+      "10277": false,
+      "10994": true,
+      "3734": true,
+      "5765": false,
+      "12253": false,
+      "2963": false,
+      "916": false,
+      "3695": false,
+      "8535": false,
+      "10863": false,
+      "12088": false,
+      "138": true,
+      "1216": true,
+      "12018": false,
+      "2293": true,
+      "12922": false,
+      "11003": false,
+      "7326": true,
+      "4163": true,
+      "13071": false,
+      "10795": false,
+      "3020": false,
+      "2921": true,
+      "4485": true,
+      "1253": true,
+      "6542": false,
+      "676": false,
+      "1824": true,
+      "11495": true,
+      "1745": true,
+      "10008": false,
+      "6619": false,
+      "1446": true,
+      "617": false,
+      "13296": true,
+      "10292": true,
+      "11644": false,
+      "11608": false,
+      "6803": false,
+      "10062": false,
+      "501": true,
+      "9083": false,
+      "9218": true,
+      "3921": true,
+      "11377": false,
+      "7589": false,
+      "9277": false,
+      "9925": false,
+      "13168": false,
+      "1871": false,
+      "249": true,
+      "11884": false,
+      "5860": true,
+      "11091": false,
+      "2998": true,
+      "4667": false,
+      "8479": false,
+      "7951": true,
+      "5513": true,
+      "8580": false,
+      "13379": false,
+      "7470": false,
+      "2706": false,
+      "9170": false,
+      "8207": true,
+      "2631": false,
+      "12626": false,
+      "1204": true,
+      "2588": true,
+      "11836": true,
+      "6390": true,
+      "5728": false,
+      "9148": false,
+      "7901": true,
+      "106": true,
+      "1073": false,
+      "6316": false,
+      "1763": false,
+      "3427": true,
+      "3610": false,
+      "2310": false,
+      "10261": true,
+      "1000": false,
+      "5276": true,
+      "11410": false,
+      "9691": true,
+      "1354": false,
+      "7965": true,
+      "158": false,
+      "7029": false,
+      "4275": true,
+      "2183": false,
+      "3238": false,
+      "8677": false,
+      "8885": true,
+      "7548": true,
+      "3490": false,
+      "11078": false,
+      "10892": false,
+      "5893": true,
+      "1761": true,
+      "5651": false,
+      "9014": false,
+      "2459": true,
+      "1123": false,
+      "8556": false,
+      "8451": false,
+      "5391": true,
+      "6983": true,
+      "12861": false,
+      "12689": false,
+      "2944": false,
+      "5767": true,
+      "10053": true,
+      "1764": true,
+      "3388": false,
+      "7682": true,
+      "1425": false,
+      "1298": true,
+      "949": false,
+      "12000": true,
+      "6268": true,
+      "11905": false,
+      "1614": true,
+      "6672": true,
+      "200": true,
+      "12801": true,
+      "1962": true,
+      "6118": false,
+      "3476": false,
+      "8388": true,
+      "5358": true,
+      "5308": false,
+      "8003": true,
+      "5167": true,
+      "11830": false,
+      "12973": false,
+      "6227": true,
+      "2423": false,
+      "3911": true,
+      "3557": false,
+      "3714": false,
+      "6314": false,
+      "8233": false,
+      "8497": false,
+      "10121": true,
+      "3492": false,
+      "8890": false,
+      "12125": true,
+      "9024": true,
+      "7800": false,
+      "5038": true,
+      "2512": false,
+      "13067": false,
+      "10196": true,
+      "5402": true,
+      "1636": false,
+      "573": false,
+      "8063": false,
+      "5298": true,
+      "1584": false,
+      "10418": true,
+      "6730": true,
+      "5793": false,
+      "4448": false,
+      "13282": false,
+      "9551": false,
+      "1553": true,
+      "4490": false,
+      "26": true,
+      "3302": true,
+      "11528": false,
+      "10760": true,
+      "3408": true,
+      "10285": true,
+      "4677": false,
+      "2932": true,
+      "10889": true,
+      "8971": false,
+      "9725": false,
+      "10184": false,
+      "9158": true,
+      "2033": false,
+      "8283": false,
+      "2790": true,
+      "11862": false,
+      "6377": true,
+      "11930": false,
+      "12580": true,
+      "8829": true,
+      "6174": false,
+      "12687": false,
+      "3644": true,
+      "8152": true,
+      "651": true,
+      "9414": false,
+      "4785": true,
+      "4595": false,
+      "8435": true,
+      "3213": true,
+      "11144": false,
+      "7072": false,
+      "4113": true,
+      "706": false,
+      "12367": false,
+      "4764": false,
+      "3986": false,
+      "7427": true,
+      "4701": true,
+      "13357": true,
+      "11892": true,
+      "4316": false,
+      "5133": false,
+      "6079": false,
+      "7137": true,
+      "7104": false,
+      "4812": true,
+      "2579": true,
+      "10172": false,
+      "5944": false,
+      "8123": false,
+      "11735": false,
+      "10384": false,
+      "11": true,
+      "356": true,
+      "7625": true,
+      "1767": false,
+      "12219": false,
+      "4585": false,
+      "1762": false,
+      "7842": false,
+      "8395": false,
+      "5524": true,
+      "1343": true,
+      "6507": false,
+      "4776": false,
+      "6068": true,
+      "2103": true,
+      "2389": true,
+      "5323": true,
+      "8410": false,
+      "4504": false,
+      "1167": true,
+      "9611": false,
+      "6842": true,
+      "4384": false,
+      "1666": true,
+      "12470": false,
+      "11030": true,
+      "7700": true,
+      "5587": false,
+      "10118": false,
+      "5629": false,
+      "5355": true,
+      "3355": false,
+      "9149": false,
+      "4681": true,
+      "8808": true,
+      "9882": false,
+      "10765": true,
+      "8028": true,
+      "778": false,
+      "4852": true,
+      "10922": true,
+      "11835": false,
+      "2809": false,
+      "1393": true,
+      "828": false,
+      "5936": false,
+      "11896": false,
+      "6964": true,
+      "1456": false,
+      "8892": true,
+      "959": true,
+      "13110": true,
+      "5437": false,
+      "6024": false,
+      "7167": false,
+      "3140": false,
+      "10891": false,
+      "10105": false,
+      "6343": false,
+      "6790": false,
+      "6566": false,
+      "9673": false,
+      "10570": true,
+      "13140": true,
+      "3339": true,
+      "6744": false,
+      "5445": false,
+      "3570": false,
+      "12563": true,
+      "2463": false,
+      "2013": true,
+      "927": true,
+      "5236": false,
+      "1326": false,
+      "12942": false,
+      "9941": false,
+      "6534": true,
+      "1378": false,
+      "8845": true,
+      "3866": false,
+      "11524": false,
+      "6310": true,
+      "6915": false,
+      "5215": true,
+      "13114": false
+    };
 
     const GOLD_PATCH = {};
-</script>
+  </script>
 
 
   <script>
@@ -901,50 +958,50 @@ const GOLD_TRUTH = {
        ====================== */
     const LS_KEY = 'rankingEtiquetas_v1';
 
-    function parseCSV(text){
-      const lines = text.replace(/\r/g,'').split('\n').filter(l=>l.trim().length>0);
+    function parseCSV(text) {
+      const lines = text.replace(/\r/g, '').split('\n').filter(l => l.trim().length > 0);
       const header = splitCSVLine(lines[0]);
       const rows = lines.slice(1).map(line => {
         const cols = splitCSVLine(line);
         const obj = {};
-        header.forEach((h,i)=> obj[h.trim()] = (cols[i]??'').trim());
+        header.forEach((h, i) => obj[h.trim()] = (cols[i] ?? '').trim());
         return obj;
       });
       return { header, rows };
     }
-    function splitCSVLine(line){
+    function splitCSVLine(line) {
       const out = []; let cur = ''; let q = false;
-      for(let i=0;i<line.length;i++){
+      for (let i = 0; i < line.length; i++) {
         const ch = line[i];
-        if(ch==='"'){
-          if(q && line[i+1]==='"'){ cur+='"'; i++; }
-          else { q=!q; }
-        } else if(ch===',' && !q){ out.push(cur); cur=''; }
-        else { cur+=ch; }
+        if (ch === '"') {
+          if (q && line[i + 1] === '"') { cur += '"'; i++; }
+          else { q = !q; }
+        } else if (ch === ',' && !q) { out.push(cur); cur = ''; }
+        else { cur += ch; }
       }
       out.push(cur);
       return out;
     }
-    function toBool(v){
-      if(typeof v === 'boolean') return v;
+    function toBool(v) {
+      if (typeof v === 'boolean') return v;
       const s = String(v).trim().toLowerCase();
-      return s==='true' || s==='1' || s==='t' || s==='yes' || s==='si' || s==='sí';
+      return s === 'true' || s === '1' || s === 't' || s === 'yes' || s === 'si' || s === 'sí';
     }
-    function fmtPct(p){ return (p*100).toFixed(2)+'%'; }
-    function todayISO(){ return new Date().toLocaleString(); }
-    function normalizeId(v){
+    function fmtPct(p) { return (p * 100).toFixed(2) + '%'; }
+    function todayISO() { return new Date().toLocaleString(); }
+    function normalizeId(v) {
       const s = String(v ?? '').trim();
-      if(/^\d+(?:\.0+)?$/.test(s)) return String(parseInt(Number(s),10)); // 1234.0 → "1234"
+      if (/^\d+(?:\.0+)?$/.test(s)) return String(parseInt(Number(s), 10)); // 1234.0 → "1234"
       return s;
     }
-    function rebuildGold(baseMap, patch){
+    function rebuildGold(baseMap, patch) {
       const out = {};
-      for(const [k,v] of Object.entries(baseMap||{})){
+      for (const [k, v] of Object.entries(baseMap || {})) {
         const id = normalizeId(k);
-        if(!id) continue;
+        if (!id) continue;
         out[id] = !!v;
       }
-      for(const [k,v] of Object.entries(patch||{})){
+      for (const [k, v] of Object.entries(patch || {})) {
         const id = normalizeId(k);
         out[id] = !!v;
       }
@@ -961,61 +1018,63 @@ const GOLD_TRUTH = {
     const teamNameInput = document.getElementById('teamName');
 
     // Drag & drop
-    ;['dragenter','dragover'].forEach(evt=> dz.addEventListener(evt, e=>{e.preventDefault(); dz.classList.add('drag')}));
-    ;['dragleave','drop'].forEach(evt=> dz.addEventListener(evt, e=>{e.preventDefault(); dz.classList.remove('drag')}));
-    dz.addEventListener('drop', e=>{
+    ;['dragenter', 'dragover'].forEach(evt => dz.addEventListener(evt, e => { e.preventDefault(); dz.classList.add('drag') }));
+    ;['dragleave', 'drop'].forEach(evt => dz.addEventListener(evt, e => { e.preventDefault(); dz.classList.remove('drag') }));
+    dz.addEventListener('drop', e => {
       const f = e.dataTransfer.files?.[0];
-      if(f) fileInput.files = e.dataTransfer.files;
+      if (f) fileInput.files = e.dataTransfer.files;
     });
-    browseLink.addEventListener('click', e=>{ e.preventDefault(); fileInput.click(); });
+    browseLink.addEventListener('click', e => { e.preventDefault(); fileInput.click(); });
 
     // ===== Orden de ranking: pct DESC, luego createdAt ASC (primero en lograrlo) =====
-    function tsFrom(r){
+    function tsFrom(r) {
       if (typeof r.createdAt === 'number' && Number.isFinite(r.createdAt)) return r.createdAt;
       const t = Date.parse(r.date ?? '');
       return Number.isFinite(t) ? t : Number.POSITIVE_INFINITY; // si no hay info, al final
     }
-    function compareRanking(a,b){
+    function compareRanking(a, b) {
       const pa = +a.pct, pb = +b.pct;
       if (pb !== pa) return pb - pa;          // % desc
       return tsFrom(a) - tsFrom(b);           // más antiguo primero
     }
 
     // ===== RANKING render (🔥 para el top 1 tras ordenar) =====
-    function renderRankingFromArray(arr){
+    function renderRankingFromArray(arr) {
       const sorted = [...arr].sort(compareRanking);
-      rankingBody.innerHTML = sorted.map((r,i)=> {
+      rankingBody.innerHTML = sorted.map((r, i) => {
         const pos = i + 1;
-        const labelTeam = (i===0 ? '🔥 ' : '') + r.team;
+        const labelTeam = (i === 0 ? '🔥 ' : '') + r.team;
         return `
           <tr>
             <td>${pos}</td>
             <td>${labelTeam}</td>
+            <td>${r.challenge || '-'}</td>
             <td><span class="small text-muted">${r.date ?? ''}</span></td>
             <td class="text-end fw-semibold">${(+r.pct).toFixed(2)}%</td>
           </tr>
         `;
       }).join('');
     }
-    function renderRankingLocal(){
+    function renderRankingLocal() {
       const arr = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
       renderRankingFromArray(arr);
     }
     window.renderRankingFromArray = renderRankingFromArray; // para el módulo Firebase
 
     // ===== Validación (siempre por columna ID) =====
-    btnValidate.addEventListener('click', async ()=>{
+    btnValidate.addEventListener('click', async () => {
       const file = fileInput.files?.[0];
-      if(!file){ alert('Primero seleccioná un archivo CSV.'); return; }
+      if (!file) { alert('Primero seleccioná un archivo CSV.'); return; }
 
       const team = teamNameInput.value.trim() || 'Anónimo';
+      const challenge = document.getElementById('challengeSelect').value;
       const text = await file.text();
-      const {header, rows} = parseCSV(text);
+      const { header, rows } = parseCSV(text);
 
-      const colsLower = header.map(h=>h.toLowerCase());
+      const colsLower = header.map(h => h.toLowerCase());
       const idIdx = colsLower.indexOf('id');
       const labelIdx = colsLower.indexOf('etiqueta');
-      if(idIdx===-1 || labelIdx===-1){
+      if (idIdx === -1 || labelIdx === -1) {
         alert('Tu CSV debe contener las columnas "ID" y "Etiqueta".');
         return;
       }
@@ -1023,32 +1082,31 @@ const GOLD_TRUTH = {
       const GOLD = rebuildGold(GOLD_TRUTH, GOLD_PATCH);
 
       let comparable = [];
-      for(const r of rows){
+      for (const r of rows) {
         const id = normalizeId(r[header[idIdx]]);
-        if(!id) continue;
+        if (!id) continue;
         const pred = toBool(r[header[labelIdx]]);
         const gold = GOLD[id];
-        if(typeof gold === 'boolean'){
-          comparable.push({pred, gold});
+        if (typeof gold === 'boolean') {
+          comparable.push({ pred, gold });
         }
       }
 
-      if(comparable.length===0){
+      if (comparable.length === 0) {
         alert('No se encontraron filas comparables. Verificá los valores de ID y Etiqueta.');
         return;
       }
 
-      const matches = comparable.filter(r=> r.pred === r.gold).length;
+      const matches = comparable.filter(r => r.pred === r.gold).length;
       const pct = matches / comparable.length;
 
       // Resultado
-      resultCard.classList.remove('d-none','alert-danger','alert-info');
+      resultCard.classList.remove('d-none', 'alert-danger', 'alert-info');
       resultCard.classList.add('alert-info');
       resultCard.innerHTML = `<strong>Resultado:</strong> Coincidencias ${matches} / ${comparable.length} ⇒ <span class="badge text-bg-primary score-badge">${fmtPct(pct)}</span>`;
 
       // Ranking local (guarda createdAt para resolver empates)
-      const entry = { team, pct: +(pct*100).toFixed(4), date: todayISO(), createdAt: Date.now() };
-      const arr = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+      const entry = { team, challenge, pct: +(pct * 100).toFixed(4), date: todayISO(), createdAt: Date.now() };
       arr.push(entry);
       localStorage.setItem(LS_KEY, JSON.stringify(arr));
       renderRankingLocal();
@@ -1060,17 +1118,17 @@ const GOLD_TRUTH = {
     });
 
     // Controles ranking local
-    document.getElementById('btnClearRanking').addEventListener('click', ()=>{
-      if(confirm('¿Eliminar el ranking guardado en este navegador?')){
+    document.getElementById('btnClearRanking').addEventListener('click', () => {
+      if (confirm('¿Eliminar el ranking guardado en este navegador?')) {
         localStorage.removeItem(LS_KEY);
         renderRankingLocal();
       }
     });
-    document.getElementById('btnExportRanking').addEventListener('click', ()=>{
+    document.getElementById('btnExportRanking').addEventListener('click', () => {
       const arr = JSON.parse(localStorage.getItem(LS_KEY) || '[]').sort(compareRanking);
-      const header = ['pos','equipo','fecha','porcentaje'];
-      const lines = [header.join(',')].concat(arr.map((r,i)=> [i+1, r.team, r.date, r.pct].join(',')));
-      const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+      const header = ['pos', 'equipo', 'fecha', 'porcentaje'];
+      const lines = [header.join(',')].concat(arr.map((r, i) => [i + 1, r.team, r.date, r.pct].join(',')));
+      const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a'); a.href = url; a.download = 'ranking.csv'; a.click();
       URL.revokeObjectURL(url);
@@ -1103,18 +1161,18 @@ const GOLD_TRUTH = {
     };
 
     let db;
-    try{
+    try {
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
       await signInAnonymously(auth);  // Activá "Anonymous" en Authentication
       db = getDatabase(app);
       console.log("Firebase listo (auth anónima OK)");
-    }catch(e){
+    } catch (e) {
       console.warn("Firebase no inicializado (seguís con localStorage).", e);
     }
 
     // Guardar ranking en RTDB (con createdAt para resolver empates por tiempo)
-    window.saveRankingToRTDB = async function(entry) {
+    window.saveRankingToRTDB = async function (entry) {
       if (!db) return;
       const payload = {
         team: entry.team,
@@ -1154,4 +1212,5 @@ const GOLD_TRUTH = {
     }
   </script>
 </body>
+
 </html>
