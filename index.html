@@ -70,7 +70,7 @@
   <div class="container mb-4">
     <div class="glass rounded-4 p-3 text-center shadow-sm">
       <h2 class="fw-bold mb-1" style="color: var(--ink); letter-spacing: .04em;">
-        Challenge <span style="color: var(--grad-a);">FakeNews</span>
+        Challenge activo: <span style="color: var(--grad-a);">FakeNews</span>
       </h2>
       <div class="text-muted">¡Poné a prueba tu modelo de detección de noticias falsas!</div>
     </div>
@@ -85,8 +85,8 @@
 
             <div class="row g-3 align-items-center mb-3">
               <div class="col-sm-12">
-                <label class="form-label mb-1">Nombre de equipo / modelo</label>
-                <input id="teamName" type="text" class="form-control" placeholder="Ej: Grupo 4 True · v3" />
+                <label class="form-label mb-1">Nombre de participante</label>
+                <input id="teamName" type="text" class="form-control" placeholder="Ej: Guillermo U" />
                 <div class="col-sm-12">
                   <label class="form-label mb-1">Competencia</label>
                   <select id="challengeSelect" class="form-select">
@@ -136,10 +136,10 @@
                 <thead>
                   <tr>
                     <th>#</th>
-                    <th>Equipo / Modelo</th>
+                    <th>Participante/th>
                     <th>Competencia</th>
                     <th>Fecha</th>
-                    <th class="text-end">% Coincidencia</th>
+                    <th class="text-end">% Acc</th>
                   </tr>
                 </thead>
                 <tbody id="rankingBody"></tbody>
