@@ -159,9 +159,6 @@
     </div>
   </footer>
 
-  <!-- ======================
-       DATOS ESPERADOS EMBEBIDOS
-       ====================== -->
   <script>
     const GOLD_TRUTH = {
       "12130": false,
@@ -953,9 +950,7 @@
 
 
   <script>
-    /* ======================
-       UTILIDADES Y LÓGICA
-       ====================== */
+
     const LS_KEY = 'rankingEtiquetas_v1';
 
     function parseCSV(text) {
@@ -1038,7 +1033,6 @@
       return tsFrom(a) - tsFrom(b);           // más antiguo primero
     }
 
-    // ===== RANKING render (🔥 para el top 1 tras ordenar) =====
     function renderRankingFromArray(arr) {
       const sorted = [...arr].sort(compareRanking);
       rankingBody.innerHTML = sorted.map((r, i) => {
