@@ -128,7 +128,7 @@
               </p>
               <small class="text-muted">Se requieren las columnas <code>ID</code> y <code>Etiqueta</code>.</small>
             </div>
-
+            <div id="fileStatus" class="mb-2"></div>
             <div class="d-flex gap-2 mb-3">
               <button id="btnValidate" class="btn btn-primary"><i class="bi bi-check2-circle"></i> Validar
                 coincidencia</button>
@@ -1006,7 +1006,7 @@
       return s === 'true' || s === '1' || s === 't' || s === 'yes' || s === 'si' || s === 'sí';
     }
     function fmtPct(p) { return (p * 100).toFixed(2) + '%'; }
-    function todayISO() { return new Date().toLocaleString(); }
+    function todayISO() { return new Date().toISOString().replace('T', ' ').slice(0, 19); }
     function normalizeId(v) {
       const s = String(v ?? '').trim();
       if (/^\d+(?:\.0+)?$/.test(s)) return String(parseInt(Number(s), 10)); // 1234.0 → "1234"
@@ -1062,12 +1062,13 @@
         const pos = i + 1;
         const labelTeam = (i === 0 ? '🔥 ' : '') + r.team;
         const rowClass = i === 0 ? 'top1-row animate__animated animate__pulse' : '';
+        const fecha = formatDateForRanking(r.date);
         return `
       <tr class="${rowClass}">
         <td>${pos}</td>
         <td>${labelTeam}</td>
         <td>${r.challenge || '-'}</td>
-        <td><span class="small text-muted">${r.date ?? ''}</span></td>
+        <td><span class="small text-muted">${fecha}</span></td>
         <td class="text-end fw-semibold">${(+r.pct).toFixed(2)}%</td>
       </tr>
     `;
@@ -1153,6 +1154,63 @@
       const a = document.createElement('a'); a.href = url; a.download = 'ranking.csv'; a.click();
       URL.revokeObjectURL(url);
     });
+    function formatDateForRanking(dateStr) {
+      if (!dateStr) return '-';
+
+      // 1. Intenta parsear como ISO o estándar
+      let d = Date.parse(dateStr);
+      if (Number.isFinite(d)) {
+        const date = new Date(d);
+        const dd = String(date.getDate()).padStart(2, '0');
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const hh = String(date.getHours()).padStart(2, '0');
+        const min = String(date.getMinutes()).padStart(2, '0');
+        return `${dd}/${mm} ${hh}:${min}`;
+      }
+
+      // 2. Intenta parsear fechas locales tipo "30/9/2025, 11:20:28 p. m."
+      //    (soporta "a. m.", "p. m.", "am", "pm", etc.)
+      const match = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([ap]\.? ?m\.?)?/i);
+      if (match) {
+        let [_, d, m, y, h, min, s, ap] = match;
+        d = d.padStart(2, '0');
+        m = m.padStart(2, '0');
+        h = h.padStart(2, '0');
+        min = min.padStart(2, '0');
+        if (ap) {
+          // Normaliza el indicador am/pm
+          ap = ap.replace(/\s|\./g, '').toLowerCase(); // "p. m." → "pm"
+          let hour = parseInt(h, 10);
+          if (ap === 'pm' && hour < 12) hour += 12;
+          if (ap === 'am' && hour === 12) hour = 0;
+          h = String(hour).padStart(2, '0');
+        }
+        return `${d}/${m} ${h}:${min}`;
+      }
+
+      // 3. Si no se puede, muestra el string original
+      return dateStr;
+    }
+
+    const fileStatus = document.getElementById('fileStatus');
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files && fileInput.files[0]) {
+        dz.classList.add('border-success');
+        fileStatus.innerHTML = `<span class="text-success"><i class="bi bi-check-circle"></i> Archivo seleccionado: <b>${fileInput.files[0].name}</b></span>`;
+      } else {
+        dz.classList.remove('border-success');
+        fileStatus.innerHTML = '';
+      }
+    });
+
+    // También actualiza el estado al soltar un archivo
+    dz.addEventListener('drop', () => {
+      if (fileInput.files && fileInput.files[0]) {
+        dz.classList.add('border-success');
+        fileStatus.innerHTML = `<span class="text-success"><i class="bi bi-check-circle"></i> Archivo seleccionado: <b>${fileInput.files[0].name}</b></span>`;
+      }
+    });
 
     // Inicial: ranking local (si Firebase lee, lo reemplaza)
     renderRankingLocal();
@@ -1232,6 +1290,63 @@
       });
     }
   </script>
+
+
+  <!-- Globo flotante de aviso de desafío -->
+  <div id="challengeToast" class="position-fixed bottom-0 end-0 p-3" style="z-index: 2000;">
+    <div class="toast show align-items-center text-bg-warning border-0 shadow-lg" role="alert" aria-live="assertive"
+      aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body">
+          <strong>¡Atención!</strong> El desafío vence el <b>sáb 4</b> y se bloquea el <b>mar 7</b> a la medianoche.<br>
+          <span id="countdown"></span>
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+          aria-label="Cerrar"></button>
+      </div>
+    </div>
+  </div>
 </body>
+<script>
+  // Configura las fechas límite
+  const deadline = new Date('2025-10-04T23:59:59'); // Sábado 4, fin del día
+  const blockTime = new Date('2025-10-07T23:59:59'); // Martes 7, fin del día
+
+  function updateCountdown() {
+    const now = new Date();
+    let msg = '';
+    if (now < deadline) {
+      const diff = deadline - now;
+      msg = `Tiempo para participar: <b>${formatDiff(diff)}</b>`;
+    } else if (now < blockTime) {
+      const diff = blockTime - now;
+      msg = `¡Desafío vencido! Tiempo hasta bloqueo: <b>${formatDiff(diff)}</b>`;
+    } else {
+      msg = `<span class="text-danger fw-bold">El desafío está bloqueado.</span>`;
+      document.getElementById('challengeToast').style.display = 'none';
+      return;
+    }
+    document.getElementById('countdown').innerHTML = msg;
+  }
+
+  function formatDiff(ms) {
+    if (ms <= 0) return '00:00:00';
+    const d = Math.floor(ms / (1000 * 60 * 60 * 24));
+    const h = Math.floor((ms / (1000 * 60 * 60)) % 24);
+    const m = Math.floor((ms / (1000 * 60)) % 60);
+    const s = Math.floor((ms / 1000) % 60);
+    return `${d > 0 ? d + 'd ' : ''}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+
+  // Permite cerrar el toast manualmente
+  document.querySelectorAll('[data-bs-dismiss="toast"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('challengeToast').style.display = 'none';
+    });
+  });
+</script>
 
 </html>
