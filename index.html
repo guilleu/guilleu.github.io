@@ -1084,7 +1084,7 @@
     async function loadRumorTruth() {
       if (rumorTruth) return rumorTruth;
       try {
-        const res = await fetch('https://guilleu.github.io/index_is_rumor.json');
+        const res = await fetch('https://gist.github.com/guilleu/92df1702aba121d7963e47c285472023');
         rumorTruth = await res.json();
         return rumorTruth;
       } catch (e) {
