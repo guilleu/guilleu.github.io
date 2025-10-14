@@ -114,7 +114,7 @@
                   <label class="form-label mb-1">Competencia</label>
                   <select id="challengeSelect" class="form-select">
                     <option value="FakeNews">Fake News</option>
-                    <option value="OtroChallenge">Otro .</option>
+                    <option value="Rumores">Rumores</option>
                     <!-- Agrega más opciones aquí en el futuro -->
                   </select>
                 </div>
@@ -1079,6 +1079,19 @@
       renderRankingFromArray(arr);
     }
     window.renderRankingFromArray = renderRankingFromArray; // para el módulo Firebase
+    let rumorTruth = null;
+
+    async function loadRumorTruth() {
+      if (rumorTruth) return rumorTruth;
+      try {
+        const res = await fetch('index_is_rumor.json');
+        rumorTruth = await res.json();
+        return rumorTruth;
+      } catch (e) {
+        alert('No se pudo cargar index_is_rumor.json');
+        return null;
+      }
+    }
 
     // ===== Validación (siempre por columna ID) =====
     btnValidate.addEventListener('click', async () => {
@@ -1090,44 +1103,86 @@
       const text = await file.text();
       const { header, rows } = parseCSV(text);
 
-      const colsLower = header.map(h => h.toLowerCase());
-      const idIdx = colsLower.indexOf('id');
-      const labelIdx = colsLower.indexOf('etiqueta');
-      if (idIdx === -1 || labelIdx === -1) {
-        alert('Tu CSV debe contener las columnas "ID" y "Etiqueta".');
-        return;
-      }
-
-      const GOLD = rebuildGold(GOLD_TRUTH, GOLD_PATCH);
-
       let comparable = [];
-      for (const r of rows) {
-        const id = normalizeId(r[header[idIdx]]);
-        if (!id) continue;
-        const pred = toBool(r[header[labelIdx]]);
-        const gold = GOLD[id];
-        if (typeof gold === 'boolean') {
-          comparable.push({ pred, gold });
+      let matches = 0;
+      let pct = 0;
+
+      if (challenge === "Rumores") {
+        // Usar index_is_rumor.json
+        const rumorData = await loadRumorTruth();
+        if (!rumorData) return;
+
+        // Buscar columnas index e is_rumor
+        const colsLower = header.map(h => h.toLowerCase());
+        const idxIdx = colsLower.indexOf('index');
+        const rumorIdx = colsLower.indexOf('is_rumor');
+        if (idxIdx === -1 || rumorIdx === -1) {
+          alert('Tu CSV debe contener las columnas "index" y "is_rumor".');
+          return;
         }
-      }
 
-      if (comparable.length === 0) {
-        alert('No se encontraron filas comparables. Verificá los valores de ID y Etiqueta.');
-        return;
-      }
+        // Construir mapa para comparación
+        const truthMap = {};
+        rumorData.forEach(obj => {
+          truthMap[String(obj.index)] = String(obj.is_rumor).toLowerCase();
+        });
 
-      const matches = comparable.filter(r => r.pred === r.gold).length;
-      const pct = matches / comparable.length;
+        for (const r of rows) {
+          const idx = String(r[header[idxIdx]]);
+          const pred = String(r[header[rumorIdx]]).toLowerCase();
+          const gold = truthMap[idx];
+          if (gold !== undefined) {
+            comparable.push({ pred, gold });
+          }
+        }
+
+        if (comparable.length === 0) {
+          alert('No se encontraron filas comparables. Verificá los valores de index y is_rumor.');
+          return;
+        }
+
+        matches = comparable.filter(r => r.pred === r.gold).length;
+        pct = matches / comparable.length;
+
+      } else {
+        // FakeNews u otro challenge (comportamiento original)
+        const colsLower = header.map(h => h.toLowerCase());
+        const idIdx = colsLower.indexOf('id');
+        const labelIdx = colsLower.indexOf('etiqueta');
+        if (idIdx === -1 || labelIdx === -1) {
+          alert('Tu CSV debe contener las columnas "ID" y "Etiqueta".');
+          return;
+        }
+
+        const GOLD = rebuildGold(GOLD_TRUTH, GOLD_PATCH);
+
+        for (const r of rows) {
+          const id = normalizeId(r[header[idIdx]]);
+          if (!id) continue;
+          const pred = toBool(r[header[labelIdx]]);
+          const gold = GOLD[id];
+          if (typeof gold === 'boolean') {
+            comparable.push({ pred, gold });
+          }
+        }
+
+        if (comparable.length === 0) {
+          alert('No se encontraron filas comparables. Verificá los valores de ID y Etiqueta.');
+          return;
+        }
+
+        matches = comparable.filter(r => r.pred === r.gold).length;
+        pct = matches / comparable.length;
+      }
 
       // Resultado
       resultCard.classList.remove('d-none', 'alert-danger', 'alert-info');
       resultCard.classList.add('alert-info');
       resultCard.innerHTML = `<strong>Resultado:</strong> Coincidencias ${matches} / ${comparable.length} ⇒ <span class="badge text-bg-primary score-badge">${fmtPct(pct)}</span>`;
 
-
       // Ranking local (guarda createdAt para resolver empates)
       const entry = { team, challenge, pct: +(pct * 100).toFixed(4), date: todayISO(), createdAt: Date.now() };
-      const arr = JSON.parse(localStorage.getItem(LS_KEY) || '[]'); // <-- AGREGA ESTA LÍNEA
+      const arr = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
       arr.push(entry);
       localStorage.setItem(LS_KEY, JSON.stringify(arr));
       renderRankingLocal();
