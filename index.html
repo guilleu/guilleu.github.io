@@ -72,6 +72,91 @@
     footer a {
       color: inherit
     }
+
+    /* Podio escalonado (escalones) */
+    .podium-container {
+      padding: 1rem 0;
+    }
+
+    .podium {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 1rem;
+      height: 170px;
+      padding: 0 0.5rem;
+    }
+
+    .podium .step {
+      width: 180px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      gap: .5rem;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+
+    .podium .platform {
+      width: 100%;
+      border-radius: .6rem;
+      text-align: center;
+      box-shadow: 0 6px 14px rgba(12, 12, 12, 0.08);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: .6rem .4rem;
+    }
+
+    .podium .label {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--ink);
+    }
+
+    .podium .score {
+      font-weight: 800;
+      font-size: 1.05rem;
+      color: #0d6efd;
+    }
+
+    .podium .meta {
+      font-size: .78rem;
+      color: #6b7280;
+      margin-top: .25rem;
+    }
+
+    /* alturas: centro más alto */
+    .step--1 .platform {
+      height: 110px;
+      background: linear-gradient(180deg, #fff7e6, #fff2d6);
+      border: 1px solid #ffe7a8;
+    }
+
+    .step--2 .platform {
+      height: 86px;
+      background: linear-gradient(180deg, #f0f6ff, #eef6ff);
+      border: 1px solid #cfe3ff;
+    }
+
+    .step--3 .platform {
+      height: 64px;
+      background: linear-gradient(180deg, #f3fff5, #effff0);
+      border: 1px solid #cfeed2;
+    }
+
+    /* pequeños ajustes responsivos */
+    @media (max-width: 768px) {
+      .podium {
+        gap: .6rem;
+        height: 150px;
+      }
+
+      .podium .step {
+        width: 30%;
+      }
+    }
   </style>
 </head>
 
@@ -90,18 +175,42 @@
     </div>
   </header>
   <!-- Challenge FakeNews Title -->
-  <div class="container mb-4">
-    <div class="glass rounded-4 p-3 text-center shadow-sm">
-      <h2 class="fw-bold mb-1" style="color: var(--ink); letter-spacing: .04em;">
-        Challenge activo: <span style="color: var(--grad-a);">FakeNews</span>
-      </h2>
-      <div class="text-muted">¡Poné a prueba tu modelo de detección de noticias falsas!</div>
-    </div>
-  </div>
+<div class="container mb-4">
+   <div class="glass rounded-4 p-3 shadow-sm">
+     <div class="d-flex align-items-center justify-content-between flex-column flex-md-row text-center text-md-start">
+       <div>
+         <h2 class="fw-bold mb-1" style="color: var(--ink); letter-spacing: .04em;">
+           Challenge activo: <span style="color: var(--grad-a);">FakeNews</span>
+         </h2>
+         <div class="text-muted">¡Poné a prueba tu modelo de detección de noticias falsas!</div>
+       </div>
+       <div class="ms-md-3 mt-3 mt-md-0" style="min-width:260px;">
+         <div class="card shadow-sm">
+           <div class="card-body p-2 text-center">
+             <!-- Podio ahora se muestra aquí -->
+             <div id="aggTop3" class="podium-container">
+               <div class="podium" aria-hidden="false">
+                 <div class="step step--2">
+                   <div class="platform"><div class="label">—</div><div class="meta">R: -</div></div>
+                 </div>
+                 <div class="step step--1">
+                   <div class="platform"><div class="label">—</div><div class="meta">F/R/S: -</div></div>
+                 </div>
+                 <div class="step step--3">
+                   <div class="platform"><div class="label">—</div><div class="meta">R: -</div></div>
+                 </div>
+               </div>
+             </div>
+           </div>
+         </div>
+       </div>
+     </div>
+   </div>
+ </div>
   <main class="container pb-5">
     <div class="row g-4">
       <!-- Panel de carga y resultado (ajustado a col-lg-4) -->
-      <div class="col-12 col-lg-3">
+      <div class="col-12 col-lg-4">
         <div class="card shadow-lg glass">
           <div class="card-body p-4">
             <h2 class="h5 mb-3"><i class="bi bi-cloud-upload"></i> Subí tu archivo</h2>
@@ -142,22 +251,9 @@
         </div>
       </div>
 
-      <div class="col-12 col-lg-3 d-flex align-items-stretch">
-        <div class="card shadow-lg glass w-100">
-          <div class="card-body p-4 text-center">
-            <h2 class="h5 mb-2"><i class="bi bi-stars"></i> Podio agregado (Top 3)</h2>
-            <p class="text-muted small mb-3">Suma de mejores puntajes por equipo (uno por competencia)</p>
-            <div id="aggTop3" class="list-group list-group-flush text-start">
-              <div class="list-group-item">1. —</div>
-              <div class="list-group-item">2. —</div>
-              <div class="list-group-item">3. —</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
+  
       <!-- Ranking -->
-      <div class="col-12 col-lg-6">
+      <div class="col-12 col-lg-8">
         <div class="card shadow-lg glass">
           <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-center mb-2">
@@ -1597,26 +1693,32 @@
       const container = document.getElementById('aggTop3');
       if (!container) return;
       const top = computeAggregatedTop();
-      container.innerHTML = '';
-      for (let i = 0; i < 3; i++) {
-        const item = top[i];
-        if (item) {
-          const rankIcon = i === 0 ? '🥇' : (i === 1 ? '🥈' : '🥉');
-          const details = AGG_CHALLENGES.map(c => {
-            const p = item.byChallenge[c]?.pct;
-            return `${c === 'FakeNews' ? 'F' : c === 'Rumores' ? 'R' : 'S'}:${(p !== undefined ? (+p).toFixed(2) + '%' : '-')}`;
-          }).join(' ');
-          const el = document.createElement('div');
-          el.className = 'list-group-item d-flex justify-content-between align-items-start';
-          el.innerHTML = `<div><strong>${rankIcon} ${escapeHtml(item.team)}</strong><div class="small text-muted">${details}</div></div><div class="fw-semibold">${(+item.sumPct).toFixed(2)}%</div>`;
-          container.appendChild(el);
-        } else {
-          const el = document.createElement('div');
-          el.className = 'list-group-item text-muted';
-          el.textContent = `${i + 1}. —`;
-          container.appendChild(el);
+      // construiremos el HTML del podio (visual: segundo - primero - tercero)
+      const slots = [top[1] || null, top[0] || null, top[2] || null];
+      const icons = ['🥈', '🥇', '🥉'];
+      const labelsShort = (item) => {
+        if (!item) return 'F/R/S: -';
+        return AGG_CHALLENGES.map(c => {
+          const p = item.byChallenge[c]?.pct;
+          return `${c === 'FakeNews' ? 'F' : c === 'Rumores' ? 'R' : 'S'}:${(p !== undefined ? (+p).toFixed(0) + '%' : '-')}`;
+        }).join(' ');
+      };
+
+      const html = slots.map((it, idx) => {
+        const stepClass = idx === 0 ? 'step--2' : (idx === 1 ? 'step--1' : 'step--3');
+        if (!it) {
+          return `<div class="step ${stepClass}"><div class="platform"><div class="label">${icons[idx]} —</div><div class="meta">F/R/S: -</div></div></div>`;
         }
-      }
+        return `<div class="step ${stepClass}">
+                  <div class="platform">
+                    <div class="label">${icons[idx]} ${escapeHtml(it.team)}</div>
+                    <div class="meta">${labelsShort(it)}</div>
+                  </div>
+                  <div style="margin-top:.35rem; text-align:center;"><div class="score">${(+it.sumPct).toFixed(2)}%</div></div>
+                </div>`;
+      }).join('');
+
+      container.innerHTML = `<div class="podium">${html}</div>`;
     }
 
     // pequeño helper para evitar inyección si los nombres vienen con HTML
