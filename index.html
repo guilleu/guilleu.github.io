@@ -125,7 +125,9 @@
             <div id="dropZone" class="drop-zone text-center mb-3">
               <input id="fileInput" type="file" accept=".csv" class="d-none" />
               <p class="mb-2"><i class="bi bi-filetype-csv fs-2"></i></p>
-              <p class="mb-2">Arrastrá y soltá tu <strong>CSV</strong> aquí, o <a href="#" id="browseLink">buscalo</a>.
+
+              <p class="mb-2">Arrastrá y soltá tu <strong>CSV</strong> aquí, o <a href="javascript:void(0)"
+                  id="browseLink">buscalo</a>.</p>
               </p>
               <small class="text-muted">Se requieren las columnas <code>ID</code> y <code>Etiqueta</code>.</small>
             </div>
@@ -1578,6 +1580,11 @@
     const rankingBody = document.getElementById('rankingBody');
     const teamNameInput = document.getElementById('teamName');
     const filterChallengeSelect = document.getElementById('filterChallengeSelect');
+
+    browseLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      fileInput.click();
+    });
 
     // Re-render cuando cambie el filtro
     if (filterChallengeSelect) {
