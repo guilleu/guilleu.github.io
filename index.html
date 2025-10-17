@@ -1606,9 +1606,22 @@
 
     function renderRankingFromArray(arr) {
       const sorted = [...arr].sort(compareRanking);
+
+      // contador por competencia para asignar iconos al 1° y 2°
+      const seenByChallenge = {};
+
       rankingBody.innerHTML = sorted.map((r, i) => {
         const pos = i + 1;
-        const labelTeam = (i === 0 ? '🔥 ' : '') + r.team;
+        const challengeKey = String(r.challenge || '');
+        seenByChallenge[challengeKey] = (seenByChallenge[challengeKey] || 0) + 1;
+        const rankInChallenge = seenByChallenge[challengeKey];
+
+        // prefijo según posición dentro de la competencia
+        let prefix = '';
+        if (rankInChallenge === 1) prefix = '🔥 ';
+        else if (rankInChallenge === 2) prefix = '💎 ';
+
+        const labelTeam = prefix + ((i === 0 && !prefix) ? '🔥 ' + r.team : r.team); // mantiene fuego global si querés
         const rowClass = i === 0 ? 'top1-row animate__animated animate__pulse' : '';
         const fecha = formatDateForRanking(r.date);
         return `
