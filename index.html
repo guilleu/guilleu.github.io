@@ -146,11 +146,19 @@
           <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-center mb-2">
               <h2 class="h5 mb-0"><i class="bi bi-trophy"></i> Ranking de mejores porcentajes</h2>
-              <div class="btn-group">
-                <button id="btnClearRanking" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash3"></i>
-                  Limpiar</button>
-                <button id="btnExportRanking" class="btn btn-sm btn-outline-primary"><i
-                    class="bi bi-box-arrow-down"></i> Exportar</button>
+              <div class="d-flex align-items-center gap-2">
+                <select id="filterChallengeSelect" class="form-select form-select-sm">
+                  <option value="">Todas</option>
+                  <option value="FakeNews">Fake News</option>
+                  <option value="Rumores">Rumores</option>
+                  <option value="Sentimientos">Sentimientos</option>
+                </select>
+                <div class="btn-group">
+                  <button id="btnClearRanking" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash3"></i>
+                    Limpiar</button>
+                  <button id="btnExportRanking" class="btn btn-sm btn-outline-primary"><i
+                      class="bi bi-box-arrow-down"></i> Exportar</button>
+                </div>
               </div>
             </div>
             <p class="text-muted small">Se guarda en <code>localStorage</code> (y en Firebase si está disponible).
@@ -1569,15 +1577,12 @@
     const resultCard = document.getElementById('resultCard');
     const rankingBody = document.getElementById('rankingBody');
     const teamNameInput = document.getElementById('teamName');
+    const filterChallengeSelect = document.getElementById('filterChallengeSelect');
 
-    // Drag & drop
-    ;['dragenter', 'dragover'].forEach(evt => dz.addEventListener(evt, e => { e.preventDefault(); dz.classList.add('drag') }));
-    ;['dragleave', 'drop'].forEach(evt => dz.addEventListener(evt, e => { e.preventDefault(); dz.classList.remove('drag') }));
-    dz.addEventListener('drop', e => {
-      const f = e.dataTransfer.files?.[0];
-      if (f) fileInput.files = e.dataTransfer.files;
-    });
-    browseLink.addEventListener('click', e => { e.preventDefault(); fileInput.click(); });
+    // Re-render cuando cambie el filtro
+    if (filterChallengeSelect) {
+      filterChallengeSelect.addEventListener('change', () => renderRankingLocal());
+    }
 
     // ===== Orden de ranking: pct DESC, luego createdAt ASC (primero en lograrlo) =====
     function tsFrom(r) {
@@ -1590,6 +1595,7 @@
       if (pb !== pa) return pb - pa;          // % desc
       return tsFrom(a) - tsFrom(b);           // más antiguo primero
     }
+
 
     function renderRankingFromArray(arr) {
       const sorted = [...arr].sort(compareRanking);
@@ -1609,11 +1615,20 @@
     `;
       }).join('');
     }
+
+    // Helper para aplicar filtro (si hay uno seleccionado)
+    function applyChallengeFilter(arr) {
+      const f = filterChallengeSelect?.value || '';
+      if (!f) return arr;
+      return arr.filter(x => (x.challenge || '') === f);
+    }
+
     function renderRankingLocal() {
       const arr = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
-      renderRankingFromArray(arr);
+      renderRankingFromArray(applyChallengeFilter(arr));
     }
     window.renderRankingFromArray = renderRankingFromArray; // para el módulo Firebase
+    // ...existing code...
     let rumorTruth = null;
 
 
@@ -4895,9 +4910,11 @@
       }
     });
     document.getElementById('btnExportRanking').addEventListener('click', () => {
-      const arr = JSON.parse(localStorage.getItem(LS_KEY) || '[]').sort(compareRanking);
-      const header = ['pos', 'equipo', 'fecha', 'porcentaje'];
-      const lines = [header.join(',')].concat(arr.map((r, i) => [i + 1, r.team, r.date, r.pct].join(',')));
+      // exportar el ranking local (aplica filtro si está seleccionado)
+      const all = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+      const arr = applyChallengeFilter(all).sort(compareRanking);
+      const header = ['pos', 'equipo', 'competencia', 'fecha', 'porcentaje'];
+      const lines = [header.join(',')].concat(arr.map((r, i) => [i + 1, r.team, r.challenge || '-', r.date, r.pct].join(',')));
       const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a'); a.href = url; a.download = 'ranking.csv'; a.click();
@@ -4972,11 +4989,12 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
     import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
+    // ...existing code...
     import {
       getDatabase, ref, push,
-      query, orderByChild, limitToFirst, onValue
+      query, orderByChild, limitToFirst, onValue, equalTo
     } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
-
+    // ...existing code...
     const firebaseConfig = {
       apiKey: "AIzaSyASCCPS-7ztsele9pUk8cxlD8dDRWVwH5o",
       authDomain: "machinelearning-a0c98.firebaseapp.com",
@@ -5019,23 +5037,50 @@
     };
 
     // Leer ranking remoto y ordenar por pct DESC + createdAt ASC (garantiza empate correcto).
+    // ...existing code...
     if (db) {
-      const q = query(ref(db, "rankings"), orderByChild("negPct"), limitToFirst(100));
-      onValue(q, (snap) => {
-        const arr = [];
-        snap.forEach(child => {
-          const v = child.val();
-          // asegurar createdAt numérico si vino como string
-          if (typeof v.createdAt !== 'number') {
-            const t = Date.parse(v.date ?? '');
-            v.createdAt = Number.isFinite(t) ? t : Date.now();
-          }
-          arr.push(v);
+      const filterEl = document.getElementById('filterChallengeSelect');
+      let unsubscribe = null;
+
+      function attachListener(filter) {
+        // desuscribir anterior si existe
+        try { if (typeof unsubscribe === 'function') unsubscribe(); } catch (e) { /* ignore */ }
+
+        // si hay filtro, pedimos solo esa competencia; si no, seguimos por negPct (top N)
+        let q;
+        if (filter) {
+          q = query(ref(db, "rankings"), orderByChild("challenge"), equalTo(filter));
+        } else {
+          q = query(ref(db, "rankings"), orderByChild("negPct"), limitToFirst(100));
+        }
+
+        unsubscribe = onValue(q, (snap) => {
+          const arr = [];
+          snap.forEach(child => {
+            const v = child.val();
+            if (typeof v.createdAt !== 'number') {
+              const t = Date.parse(v.date ?? '');
+              v.createdAt = Number.isFinite(t) ? t : Date.now();
+            }
+            arr.push(v);
+          });
+
+          // como robustez, aplicar filtro local si el servidor devolviera más datos
+          const fil = filter || (filterEl?.value || '');
+          const final = fil ? arr.filter(x => (x.challenge || '') === fil) : arr;
+          window.renderRankingFromArray(final);
+        }, (err) => {
+          console.error("RTDB READ ERROR:", err);
+          alert("❌ No se pudo leer de Firebase. Detalle: " + (err.code || err.message));
         });
-        window.renderRankingFromArray(arr); // vuelve a ordenar con compareRanking
-      }, (err) => {
-        console.error("RTDB READ ERROR:", err);
-        alert("❌ No se pudo leer de Firebase. Detalle: " + (err.code || err.message));
+      }
+
+      // attach inicial según valor actual del select
+      attachListener(filterEl?.value || '');
+
+      // re-attach cuando cambie el select
+      filterEl?.addEventListener('change', () => {
+        attachListener(filterEl.value);
       });
     }
   </script>
