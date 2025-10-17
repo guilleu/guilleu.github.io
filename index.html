@@ -100,8 +100,8 @@
   </div>
   <main class="container pb-5">
     <div class="row g-4">
-      <!-- Panel de carga y resultado -->
-      <div class="col-12 col-lg-7">
+      <!-- Panel de carga y resultado (ajustado a col-lg-4) -->
+      <div class="col-12 col-lg-3">
         <div class="card shadow-lg glass">
           <div class="card-body p-4">
             <h2 class="h5 mb-3"><i class="bi bi-cloud-upload"></i> Subí tu archivo</h2>
@@ -115,7 +115,7 @@
                   <select id="challengeSelect" class="form-select">
                     <option value="FakeNews">Fake News</option>
                     <option value="Rumores">Rumores</option>
-                    + <option value="Sentimientos">Sentimientos</option>
+                    <option value="Sentimientos">Sentimientos</option>
                     <!-- Agrega más opciones aquí en el futuro -->
                   </select>
                 </div>
@@ -142,15 +142,28 @@
         </div>
       </div>
 
+      <div class="col-12 col-lg-3 d-flex align-items-stretch">
+        <div class="card shadow-lg glass w-100">
+          <div class="card-body p-4 text-center">
+            <h2 class="h5 mb-2"><i class="bi bi-stars"></i> Podio agregado (Top 3)</h2>
+            <p class="text-muted small mb-3">Suma de mejores puntajes por equipo (uno por competencia)</p>
+            <div id="aggTop3" class="list-group list-group-flush text-start">
+              <div class="list-group-item">1. —</div>
+              <div class="list-group-item">2. —</div>
+              <div class="list-group-item">3. —</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Ranking -->
-      <div class="col-12 col-lg-5">
+      <div class="col-12 col-lg-6">
         <div class="card shadow-lg glass">
           <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-center mb-2">
               <h2 class="h5 mb-0"><i class="bi bi-trophy"></i> Ranking de mejores porcentajes</h2>
               <div class="d-flex align-items-center gap-2">
                 <select id="filterChallengeSelect" class="form-select form-select-sm">
-                  <option value="">Todas</option>
                   <option value="FakeNews">Fake News</option>
                   <option value="Rumores">Rumores</option>
                   <option value="Sentimientos">Sentimientos</option>
@@ -1518,7 +1531,100 @@
 
   <script>
 
+    // ...existing code...
     const LS_KEY = 'rankingEtiquetas_v1';
+
+    // --- Agregado: cache remoto y funciones para podio agregado ---
+    window.remoteRankingsCache = window.remoteRankingsCache || []; // actualizado por Firebase
+    const AGG_CHALLENGES = ['FakeNews', 'Rumores', 'Sentimientos']; // solo estas 3 se suman
+
+    function getAllStoredEntries() {
+      const local = JSON.parse(localStorage.getItem(LS_KEY) || '[]') || [];
+      // preferir la caché global (sin filtrar) si existe; si no, usar la caché filtrada
+      const remoteAll = Array.isArray(window.remoteRankingsAllCache) ? window.remoteRankingsAllCache : null;
+      const remote = Array.isArray(window.remoteRankingsCache) ? window.remoteRankingsCache : [];
+      const useRemote = remoteAll && remoteAll.length ? remoteAll : remote;
+      return [...local, ...useRemote];
+    }
+
+    // ...existing code...
+    function computeAggregatedTop() {
+      // retorna array de { teamKey, team, sumPct, byChallenge: {ch: {pct,createdAt}}, earliestCreatedAt }
+      const entries = getAllStoredEntries();
+      const best = {}; // best[teamKey][challenge] = {pct, createdAt}, best[teamKey]._display = nombre original
+
+      for (const e of entries) {
+        const teamRaw = String(e.team || '').trim();
+        if (!teamRaw) continue;
+        // normalizar clave del equipo para agrupar (minúsculas, espacios colapsados)
+        const teamKey = teamRaw.toLowerCase().replace(/\s+/g, ' ');
+        const ch = String(e.challenge || '').trim();
+        if (!AGG_CHALLENGES.includes(ch)) continue;
+
+        const pct = Number(e.pct) || 0;
+        const createdAt = Number(e.createdAt) || (Date.parse(e.date || '') || Date.now());
+
+        best[teamKey] = best[teamKey] || { _display: teamRaw };
+        const prev = best[teamKey][ch];
+        if (!prev || pct > prev.pct || (pct === prev.pct && createdAt < prev.createdAt)) {
+          best[teamKey][ch] = { pct, createdAt };
+          // mantener nombre legible (el primero que aparece)
+          if (!best[teamKey]._display) best[teamKey]._display = teamRaw;
+        }
+      }
+
+      const out = [];
+      for (const [teamKey, map] of Object.entries(best)) {
+        const display = map._display || teamKey;
+        const sumPct = AGG_CHALLENGES.reduce((s, c) => s + (map[c]?.pct || 0), 0);
+        const earliest = AGG_CHALLENGES.reduce((m, c) => {
+          const it = map[c]?.createdAt;
+          if (it === undefined) return m;
+          return m === null ? it : Math.min(m, it);
+        }, null) || Date.now();
+        out.push({ teamKey, team: display, sumPct, byChallenge: map, earliestCreatedAt: earliest });
+      }
+
+      out.sort((a, b) => {
+        if (b.sumPct !== a.sumPct) return b.sumPct - a.sumPct;
+        return a.earliestCreatedAt - b.earliestCreatedAt;
+      });
+
+      return out.slice(0, 3);
+    }
+
+    function renderAggregatedTop3() {
+      const container = document.getElementById('aggTop3');
+      if (!container) return;
+      const top = computeAggregatedTop();
+      container.innerHTML = '';
+      for (let i = 0; i < 3; i++) {
+        const item = top[i];
+        if (item) {
+          const rankIcon = i === 0 ? '🥇' : (i === 1 ? '🥈' : '🥉');
+          const details = AGG_CHALLENGES.map(c => {
+            const p = item.byChallenge[c]?.pct;
+            return `${c === 'FakeNews' ? 'F' : c === 'Rumores' ? 'R' : 'S'}:${(p !== undefined ? (+p).toFixed(2) + '%' : '-')}`;
+          }).join(' ');
+          const el = document.createElement('div');
+          el.className = 'list-group-item d-flex justify-content-between align-items-start';
+          el.innerHTML = `<div><strong>${rankIcon} ${escapeHtml(item.team)}</strong><div class="small text-muted">${details}</div></div><div class="fw-semibold">${(+item.sumPct).toFixed(2)}%</div>`;
+          container.appendChild(el);
+        } else {
+          const el = document.createElement('div');
+          el.className = 'list-group-item text-muted';
+          el.textContent = `${i + 1}. —`;
+          container.appendChild(el);
+        }
+      }
+    }
+
+    // pequeño helper para evitar inyección si los nombres vienen con HTML
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+    }
+    // ...existing code...
+    // ...existing code...
 
     function parseCSV(text) {
       const lines = text.replace(/\r/g, '').split('\n').filter(l => l.trim().length > 0);
@@ -1639,15 +1745,17 @@
     // Helper para aplicar filtro (si hay uno seleccionado)
     function applyChallengeFilter(arr) {
       const f = filterChallengeSelect?.value || '';
-      if (!f) return arr;
+      // Si no hay filtro seleccionado, no devolver todos — devolver vacío para forzar selección
+      if (!f) return [];
       return arr.filter(x => (x.challenge || '') === f);
     }
 
     function renderRankingLocal() {
       const arr = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
       renderRankingFromArray(applyChallengeFilter(arr));
+      // actualizar podio agregado
+      renderAggregatedTop3();
     }
-    window.renderRankingFromArray = renderRankingFromArray; // para el módulo Firebase
     // ...existing code...
     let rumorTruth = null;
 
@@ -5062,6 +5170,34 @@
       const filterEl = document.getElementById('filterChallengeSelect');
       let unsubscribe = null;
 
+      function attachGlobalListener() {
+        try {
+          const qg = query(ref(db, "rankings"), orderByChild("negPct"), limitToFirst(500));
+          onValue(qg, (snap) => {
+            const arrAll = [];
+            snap.forEach(child => {
+              const v = child.val();
+              if (typeof v.createdAt !== 'number') {
+                const t = Date.parse(v.date ?? '');
+                v.createdAt = Number.isFinite(t) ? t : Date.now();
+              }
+              arrAll.push(v);
+            });
+            // caché global (sin filtrar)
+            window.remoteRankingsAllCache = arrAll;
+            // actualizar podio (usa local + remoteAll)
+            try { renderAggregatedTop3(); } catch (e) { console.warn('Error actualizando podio global', e); }
+          }, (err) => {
+            console.warn('Global RTDB listener error', err);
+          });
+        } catch (e) {
+          console.warn('No se pudo attachGlobalListener', e);
+        }
+      }
+
+      // attach global una sola vez
+      attachGlobalListener();
+
       function attachListener(filter) {
         // desuscribir anterior si existe
         try { if (typeof unsubscribe === 'function') unsubscribe(); } catch (e) { /* ignore */ }
@@ -5088,6 +5224,10 @@
           // como robustez, aplicar filtro local si el servidor devolviera más datos
           const fil = filter || (filterEl?.value || '');
           const final = fil ? arr.filter(x => (x.challenge || '') === fil) : arr;
+
+          window.remoteRankingsCache = final;
+          renderAggregatedTop3();
+
           window.renderRankingFromArray(final);
         }, (err) => {
           console.error("RTDB READ ERROR:", err);
