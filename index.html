@@ -5966,7 +5966,7 @@
 
     // --- Agregado: cache remoto y funciones para podio agregado ---
     window.remoteRankingsCache = window.remoteRankingsCache || []; // actualizado por Firebase
-    const AGG_CHALLENGES = ['FakeNews', 'Rumores', 'Sentimientos']; // solo estas 3 se suman
+    const AGG_CHALLENGES = ['FakeNews', 'Rumores', 'Sentimientos', 'Declaraciones']; // ahora incluye Declaraciones
 
     function getAllStoredEntries() {
       const local = JSON.parse(localStorage.getItem(LS_KEY) || '[]') || [];
@@ -6092,61 +6092,61 @@
     }
 
     // ...existing code...
-function parseCSV(text) {
-  const raw = String(text).replace(/\r/g, '');
-  const linesAll = raw.split('\n').filter(l => l.trim().length > 0);
-  if (linesAll.length === 0) return { header: [], rows: [] };
+    function parseCSV(text) {
+      const raw = String(text).replace(/\r/g, '');
+      const linesAll = raw.split('\n').filter(l => l.trim().length > 0);
+      if (linesAll.length === 0) return { header: [], rows: [] };
 
-  const delimiters = [detectDelimiter(raw), ',', ';', '\t'].filter((v, i, a) => a.indexOf(v) === i);
-  const labelCandidates = ['id','identifier','identificador','declaracion','etiqueta','label','prediction','pred','prediccion','claim','is_claim'];
+      const delimiters = [detectDelimiter(raw), ',', ';', '\t'].filter((v, i, a) => a.indexOf(v) === i);
+      const labelCandidates = ['id', 'identifier', 'identificador', 'declaracion', 'etiqueta', 'label', 'prediction', 'pred', 'prediccion', 'claim', 'is_claim'];
 
-  let best = null;
+      let best = null;
 
-  for (const delim of delimiters) {
-    // intentar encontrar la línea de header entre las primeras 5 líneas
-    const maxHeaderLine = Math.min(5, linesAll.length - 1);
-    for (let hi = 0; hi <= maxHeaderLine; hi++) {
-      const h = splitCSVLine(linesAll[hi], delim).map(h => String(h ?? '').replace(/^\uFEFF/, '').trim());
-      const colsLower = h.map(x => x.toLowerCase());
-      const hasIdLike = colsLower.some(c => labelCandidates.includes(c));
-      if (!hasIdLike) continue; // no es header válido, seguir buscando
+      for (const delim of delimiters) {
+        // intentar encontrar la línea de header entre las primeras 5 líneas
+        const maxHeaderLine = Math.min(5, linesAll.length - 1);
+        for (let hi = 0; hi <= maxHeaderLine; hi++) {
+          const h = splitCSVLine(linesAll[hi], delim).map(h => String(h ?? '').replace(/^\uFEFF/, '').trim());
+          const colsLower = h.map(x => x.toLowerCase());
+          const hasIdLike = colsLower.some(c => labelCandidates.includes(c));
+          if (!hasIdLike) continue; // no es header válido, seguir buscando
 
-      // parsear filas a partir de hi+1
-      const parsed = linesAll.slice(hi + 1).map(line => {
-        const cols = splitCSVLine(line, delim);
-        const obj = {};
-        h.forEach((hh, i) => obj[hh] = (cols[i] ?? '').trim());
-        return obj;
-      });
+          // parsear filas a partir de hi+1
+          const parsed = linesAll.slice(hi + 1).map(line => {
+            const cols = splitCSVLine(line, delim);
+            const obj = {};
+            h.forEach((hh, i) => obj[hh] = (cols[i] ?? '').trim());
+            return obj;
+          });
 
-      // score: contar filas con número de columnas distinto al header (menos es mejor)
-      const mismatchCount = parsed.reduce((m, r) => m + (Object.keys(r).length !== h.length ? 1 : 0), 0);
-      const score = mismatchCount + (hi * 0.2); // penalizar header muy abajo
+          // score: contar filas con número de columnas distinto al header (menos es mejor)
+          const mismatchCount = parsed.reduce((m, r) => m + (Object.keys(r).length !== h.length ? 1 : 0), 0);
+          const score = mismatchCount + (hi * 0.2); // penalizar header muy abajo
 
-      if (best === null || score < best.score) {
-        best = { delim, header: h, rows: parsed, score };
+          if (best === null || score < best.score) {
+            best = { delim, header: h, rows: parsed, score };
+          }
+          if (score === 0) break;
+        }
+        if (best && best.score === 0) break;
       }
-      if (score === 0) break;
+
+      // fallback: si no encontramos header válido, usar la primera línea como antes
+      if (!best) {
+        const fallbackDelim = delimiters[0] || ',';
+        const h = splitCSVLine(linesAll[0], fallbackDelim).map(h => String(h ?? '').replace(/^\uFEFF/, '').trim());
+        const parsed = linesAll.slice(1).map(line => {
+          const cols = splitCSVLine(line, fallbackDelim);
+          const obj = {};
+          h.forEach((hh, i) => obj[hh] = (cols[i] ?? '').trim());
+          return obj;
+        });
+        return { header: h, rows: parsed };
+      }
+
+      return { header: best.header, rows: best.rows };
     }
-    if (best && best.score === 0) break;
-  }
-
-  // fallback: si no encontramos header válido, usar la primera línea como antes
-  if (!best) {
-    const fallbackDelim = delimiters[0] || ',';
-    const h = splitCSVLine(linesAll[0], fallbackDelim).map(h => String(h ?? '').replace(/^\uFEFF/, '').trim());
-    const parsed = linesAll.slice(1).map(line => {
-      const cols = splitCSVLine(line, fallbackDelim);
-      const obj = {};
-      h.forEach((hh, i) => obj[hh] = (cols[i] ?? '').trim());
-      return obj;
-    });
-    return { header: h, rows: parsed };
-  }
-
-  return { header: best.header, rows: best.rows };
-}
-// ...existing code...
+    // ...existing code...
     // ...existing code...
     function toBool(v) {
       if (typeof v === 'boolean') return v;
@@ -9524,7 +9524,7 @@ function parseCSV(text) {
 
         // ...existing code...
         // reemplazamos el bucle original por uno más robusto que intenta empates heurísticos
-      // ...existing code...
+        // ...existing code...
         // reemplazo: buscar ID y pred entre TODAS las columnas por fila (heurística)
         const skipped = [];
         for (const r of rows) {
@@ -9607,7 +9607,7 @@ function parseCSV(text) {
             });
           }
         }
-// ...existing code...
+        // ...existing code...
         // ...existing code...
         // DEBUG extendido (ya existe) ...
         (function debugDeclaraciones() {
